@@ -4,10 +4,8 @@ use std::io::Write;
 use std::path::Path;
 use std::env;
 fn main(){
-    let path=Path::new("../../../../ClearSet/FolioBridge_Source_Code/folio-bridge-ui/src/app/components/actionitemchart/actionitemchart.component.css");
-    return_path(path);
-    let dir=env::current_dir();
-    println!("dir: {:?}", dir);
+    let dir=env::current_dir().unwrap();
+    return_path(dir.as_path());
 }
 
 
