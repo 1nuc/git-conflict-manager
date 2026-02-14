@@ -8,6 +8,7 @@ fn main(){
         //     Some(index)=> println!("{:?}", index.get(2)),
         //     None => (),
         // }
+    logic();
 }
 //TODO: Make a tag to know when there is a conflict
 //TODO: Detect the conflicted branches
@@ -33,23 +34,24 @@ fn return_path(file_path: &Path) -> Option<Repository, > {
    }
 }
 
-fn return_file(condition: Status)-> Option<Vec<String>>{
+fn logic(){
     let dir=env::current_dir().unwrap();
     if let Some(repo)=return_path(dir.as_path()){
-        let mut options=StatusOptions::new();
-        options.include_untracked(false).recurse_untracked_dirs(false);
-        let status=repo.statuses(Some(&mut options)).unwrap();
-        let mut list_of_conflicted_files=Vec::new();
-        for i in status.iter(){
-            if i.status().contains(condition) && let Some(path)=i.path(){
-                    list_of_conflicted_files.push(path.to_owned());
-            }
+        let list_of_conflicted_files=return_files(Status::CONFLICTED, repo);
+    }
+}
+
+fn return_files(condition: Status, repo: Repository)-> Option<Vec<String>>{
+    let mut options=StatusOptions::new();
+    options.include_untracked(false).recurse_untracked_dirs(false);
+    let status=repo.statuses(Some(&mut options)).unwrap();
+    let mut list_of_conflicted_files=Vec::new();
+    for i in status.iter(){
+        if i.status().contains(condition) && let Some(path)=i.path(){
+                list_of_conflicted_files.push(path.to_owned());
         }
-        Some(list_of_conflicted_files)
     }
-    else{
-        None
-    }
+    Some(list_of_conflicted_files)
 }
 
 #[allow(non_snake_case)]
