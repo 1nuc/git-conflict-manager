@@ -1,4 +1,4 @@
-use git2::{Error, Repository};
+use git2::{Index, Repository};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -10,14 +10,32 @@ fn main(){
 
 
 #[allow(non_snake_case, unused_variables)]
-fn return_path(file_path: &Path){
+fn return_path(file_path: &Path) -> Option<Repository, > {
    match Repository::discover(file_path){
        Ok(repo) => {
            if let Some(path)=repo.workdir(){
                let path_: &Path= path;
-               println!("Working repository: {:?}", path_);
+               Some(repo)
+           }
+           else{
+               println!("no path found for this repo");
+               None
            }
        }
-       Error => println!("Unable to find the repository path"),
+       Error => {
+           println!("Unable to find the repository path");
+           None
+       }
    }
+}
+
+#[allow(non_snake_case)]
+fn return_index(repo: Repository) -> Option<Index,>{
+    match repo.index(){
+        Ok(index) => {
+            Some(index)
+        },
+        Error => None,
+    }
+
 }
