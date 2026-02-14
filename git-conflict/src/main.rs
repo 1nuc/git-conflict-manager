@@ -1,13 +1,29 @@
-use git2::{Index, Repository};
+use git2::{Error, Index, Repository, Status, StatusOptions};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::env;
 fn main(){
     let dir=env::current_dir().unwrap();
-    return_path(dir.as_path());
+    if let Some(repo)=return_path(dir.as_path()){
+        let mut options=StatusOptions::new();
+        options.include_untracked(false).recurse_untracked_dirs(false);
+        let status=repo.statuses(Some(&mut options)).unwrap();
+        let mut list_of_conflicted_files=Vec::new();
+        for i in status.iter(){
+            if i.status().contains(Status::CONFLICTED) && let Some(path)=i.path(){
+                    list_of_conflicted_files.push(path.to_owned());
+            }
+        }
+        // match return_index(repo){
+        //     Some(index)=> println!("{:?}", index.get(2)),
+        //     None => (),
+        // }
+    }
 }
-
+//TODO: Make a tag to know when there is a conflict
+//TODO: Detect the conflicted branches
+//TODO: make a manual merge
 
 #[allow(non_snake_case, unused_variables)]
 fn return_path(file_path: &Path) -> Option<Repository, > {
@@ -39,3 +55,4 @@ fn return_index(repo: Repository) -> Option<Index,>{
     }
 
 }
+
