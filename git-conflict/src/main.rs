@@ -1,8 +1,9 @@
-use git2::{Branch, BranchType, Commit, Error, Index, Repository, Status, StatusOptions};
+use git2::{Branch, BranchType, Commit, Error, Index, MergeOptions, Repository, Status, StatusOptions};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::env;
+use std::sync::Arc;
 fn main(){
         // match return_index(repo){
         //     Some(index)=> println!("{:?}", index.get(2)),
@@ -13,6 +14,8 @@ fn main(){
 //TODO: Make a tag to know when there is a conflict
 //TODO: Detect the conflicted branches
 //TODO: make a manual merge
+//TODO: Return the commits of the branches to perform the merge
+//TODO: detect the conflicted and accept the changes of the defined and passed branch
 
 #[allow(non_snake_case, unused_variables)]
 fn return_path(file_path: &Path) -> Option<Repository, > {
@@ -34,19 +37,24 @@ fn return_path(file_path: &Path) -> Option<Repository, > {
    }
 }
 
+#[allow(non_snake_case, unused_variables)]
 fn logic(){
     let dir=env::current_dir().unwrap();
     if let Some(repo)=return_path(dir.as_path()){
         // let list_of_conflicted_files=return_files(Status::CONFLICTED, repo);
-        let local_branches=repo.branches(Some(BranchType::Local));
+        let repository = Arc::new(repo);
+        let local_branches=repository.branches(Some(BranchType::Local));
         for branch in local_branches.unwrap(){
-            let (branch_name, branch_type)=branch.unwrap();
-            println!("branch: {:?} ", branch_name.name().unwrap().unwrap());
-            println!("branch Type: {:?}", branch_type);
+            let (branch, branch_type)=branch.unwrap();
+            // println!("branch: {:?} ", branch.name().unwrap().unwrap());
+            // println!("branch Type: {:?}", branch_type);
+            let commit=get_the_latest_commit(branch).expect("Error occured while peeling the reference");
+            println!("{:?}", commit);
         }
     }
 }
 
+#[allow(non_snake_case, unused_variables, unreachable_code)]
 fn get_the_latest_commit(branch: Branch) -> Result<Commit, Error>{
     match branch.get().peel_to_commit(){
         Ok(commit) => {
@@ -57,11 +65,15 @@ fn get_the_latest_commit(branch: Branch) -> Result<Commit, Error>{
             panic!("Error peeling to commit");
             Error
         } 
-
     }
 
 }
 
+#[allow(non_snake_case, unused_variables, unreachable_code)]
+fn merge(repo: Repository,branch_1_commit: Commit, branch_2_commit: Commit) -> Index{
+    let merge_options=MergeOptions::new();
+    repo.merge_commits(&branch_1_commit, &branch_2_commit, opts)
+}
 fn return_files(condition: Status, repo: Repository)-> Option<Vec<String>>{
     let mut options=StatusOptions::new();
     options.include_untracked(false).recurse_untracked_dirs(false);
@@ -86,4 +98,3 @@ fn return_index(repo: Repository) -> Option<Index,>{
     }
 
 }
-
