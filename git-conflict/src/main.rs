@@ -37,8 +37,13 @@ fn return_path(file_path: &Path) -> Option<Repository, > {
 fn logic(){
     let dir=env::current_dir().unwrap();
     if let Some(repo)=return_path(dir.as_path()){
-        let list_of_conflicted_files=return_files(Status::CONFLICTED, repo);
-        let branches=repo.branches(Some(BranchType::Local));
+        // let list_of_conflicted_files=return_files(Status::CONFLICTED, repo);
+        let local_branches=repo.branches(Some(BranchType::Local));
+        for branch in local_branches.unwrap(){
+            let (branch_name, branch_type)=branch.unwrap();
+            println!("branch: {:?} ", branch_name.name().unwrap().unwrap());
+            println!("branch Type: {:?}", branch_type);
+        }
     }
 }
 
