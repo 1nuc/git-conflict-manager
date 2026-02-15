@@ -1,4 +1,4 @@
-use git2::{BranchType, Error, Index, Repository, Status, StatusOptions};
+use git2::{Branch, BranchType, Commit, Error, Index, Repository, Status, StatusOptions};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -47,6 +47,21 @@ fn logic(){
     }
 }
 
+fn get_the_latest_commit(branch: Branch) -> Result<Commit, Error>{
+    match branch.get().peel_to_commit(){
+        Ok(commit) => {
+            println!("Reference commit is peeled");
+            Ok(commit)
+        },
+        Error => {
+            panic!("Error peeling to commit");
+            Error
+        } 
+
+    }
+
+}
+
 fn return_files(condition: Status, repo: Repository)-> Option<Vec<String>>{
     let mut options=StatusOptions::new();
     options.include_untracked(false).recurse_untracked_dirs(false);
@@ -59,6 +74,7 @@ fn return_files(condition: Status, repo: Repository)-> Option<Vec<String>>{
     }
     Some(list_of_conflicted_files)
 }
+
 
 #[allow(non_snake_case)]
 fn return_index(repo: Repository) -> Option<Index,>{
