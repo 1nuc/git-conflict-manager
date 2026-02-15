@@ -70,9 +70,16 @@ fn get_the_latest_commit(branch: Branch) -> Result<Commit, Error>{
 }
 
 #[allow(non_snake_case, unused_variables, unreachable_code)]
-fn merge(repo: Repository,branch_1_commit: Commit, branch_2_commit: Commit) -> Index{
+fn merge(repo: Repository,branch_1_commit: Commit, branch_2_commit: Commit) -> Result<Index, Error>{
     let merge_options=MergeOptions::new();
-    repo.merge_commits(&branch_1_commit, &branch_2_commit, opts)
+    match repo.merge_commits(&branch_1_commit,&branch_2_commit,Some(&merge_options)) {
+        Ok(index) =>{
+            Ok(index)
+        },
+        Error => {
+            Error
+        },
+    }
 }
 fn return_files(condition: Status, repo: Repository)-> Option<Vec<String>>{
     let mut options=StatusOptions::new();
