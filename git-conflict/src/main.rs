@@ -1,4 +1,4 @@
-use git2::{Error, Index, Repository, Status, StatusOptions};
+use git2::{BranchType, Error, Index, Repository, Status, StatusOptions};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -38,6 +38,7 @@ fn logic(){
     let dir=env::current_dir().unwrap();
     if let Some(repo)=return_path(dir.as_path()){
         let list_of_conflicted_files=return_files(Status::CONFLICTED, repo);
+        let branches=repo.branches(Some(BranchType::Local));
     }
 }
 
@@ -48,7 +49,7 @@ fn return_files(condition: Status, repo: Repository)-> Option<Vec<String>>{
     let mut list_of_conflicted_files=Vec::new();
     for i in status.iter(){
         if i.status().contains(condition) && let Some(path)=i.path(){
-                list_of_conflicted_files.push(path.to_owned());
+            list_of_conflicted_files.push(path.to_owned());
         }
     }
     Some(list_of_conflicted_files)
