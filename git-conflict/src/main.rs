@@ -66,7 +66,6 @@ fn get_the_latest_commit(branch: Branch) -> Result<Commit, Error>{
             Error
         } 
     }
-
 }
 
 #[allow(non_snake_case, unused_variables, unreachable_code)]
@@ -79,6 +78,18 @@ fn merge(repo: Repository,branch_1_commit: Commit, branch_2_commit: Commit) -> R
         Error => {
             Error
         },
+    }
+}
+
+
+fn resolve_conflicts(index: Index, repo: Repository){
+    let conflicts=index.conflicts();
+    for conflict in conflicts.unwrap(){
+        if let Ok(entry)=conflict{
+            println!("Our :{:?}", entry.our);
+            println!("Theirs :{:?}", entry.their);
+            println!("Optiosn :{:?}", entry.ancestor);
+        }
     }
 }
 fn return_files(condition: Status, repo: Repository)-> Option<Vec<String>>{
