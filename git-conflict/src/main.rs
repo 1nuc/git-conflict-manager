@@ -1,4 +1,4 @@
-use git2::{Branch, BranchType, Commit, Error, Index, MergeOptions, Repository, Status, StatusOptions};
+use git2::{Branch, BranchType, Commit, Error, Index, IndexEntry, MergeOptions, Repository, Status, StatusOptions};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -9,7 +9,8 @@ fn main(){
         //     Some(index)=> println!("{:?}", index.get(2)),
         //     None => (),
         // }
-    logic();
+    // logic();
+    testing_conflict_detection();
 }
 //TODO: Make a tag to know when there is a conflict
 //TODO: Detect the conflicted branches
@@ -37,6 +38,19 @@ fn return_path(file_path: &Path) -> Option<Repository, > {
    }
 }
 
+#[allow(non_snake_case, unused_variables)]
+fn testing_conflict_detection(){
+    let args: Vec<String>=env::args().collect();
+    let branch_1=args[1].clone();
+    let branch_2=args[2].clone();
+    let dir=env::current_dir().unwrap();
+    if let Some(repo)=return_path(dir.as_path()){
+        let index=repo.index().unwrap();
+        if index.has_conflicts(){
+            resolve_conflicts(index, repo);
+        }
+    }
+}
 #[allow(non_snake_case, unused_variables)]
 fn logic(){
     let dir=env::current_dir().unwrap();
@@ -82,15 +96,16 @@ fn merge(repo: Repository,branch_1_commit: Commit, branch_2_commit: Commit) -> R
 }
 
 
-fn resolve_conflicts(index: Index, repo: Repository){
-    let conflicts=index.conflicts();
-    for conflict in conflicts.unwrap(){
-        if let Ok(entry)=conflict{
-            println!("Our :{:?}", entry.our);
-            println!("Theirs :{:?}", entry.their);
-            println!("Optiosn :{:?}", entry.ancestor);
-        }
+fn resolve_conflicts(mut index: Index,repo: Repository){
+    let conflicts: Vec<_>=index.conflicts().unwrap().collect();
+    for conflict in conflicts{
+        let entry=conflict.unwrap();
+        println!("Our :{:?}", entry.our);
+        println!("Theirs :{:?}", entry.their);
+        println!("Optiosn :{:?}", entry.ancestor);
+        index.add(&entry.our.unwrap());
     }
+    index.write();
 }
 fn return_files(condition: Status, repo: Repository)-> Option<Vec<String>>{
     let mut options=StatusOptions::new();
