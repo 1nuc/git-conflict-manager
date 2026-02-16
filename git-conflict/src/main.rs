@@ -41,8 +41,8 @@ fn return_path(file_path: &Path) -> Option<Repository, > {
 #[allow(non_snake_case, unused_variables)]
 fn testing_conflict_detection(){
     let args: Vec<String>=env::args().collect();
-    let branch_1=args[1].clone();
-    let branch_2=args[2].clone();
+    // let branch_1=args[1].clone();
+    // let branch_2=args[2].clone();
     let dir=env::current_dir().unwrap();
     if let Some(repo)=return_path(dir.as_path()){
         let index=repo.index().unwrap();
@@ -105,7 +105,15 @@ fn resolve_conflicts(mut index: Index,repo: Repository){
         println!("Optiosn :{:?}", entry.ancestor);
         index.add(&entry.our.unwrap());
     }
-    index.write();
+    let tree_oid=index.write_tree().unwrap();
+    let tree=repo.find_tree(tree_oid).unwrap();
+    let signature=repo.signature().unwrap().to_owned();
+    let message="merge conflict";
+    // get the heads commits
+    let head=repo.head().unwrap();
+    let parents_commits=&[&head.peel_to_commit().unwrap()];
+
+    repo.commit(Some("HEAD"), &signature, &signature, message, &tree, parents_commits);
 }
 fn return_files(condition: Status, repo: Repository)-> Option<Vec<String>>{
     let mut options=StatusOptions::new();
