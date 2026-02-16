@@ -111,17 +111,21 @@ fn resolve_conflicts(mut index: Index,repo: Repository){
         println!("Theirs :{:?}", entry.their);
         let _=index.add(&entry.our.unwrap());
     }
+}
+
+fn commit(mut index: Index, repo: Repository)-> bool{
     let _=index.write();
-    let tree_oid=index.write_tree().unwrap();
-    let blob=repo.find_blob(tree_oid);
-    let tree=repo.find_tree(tree_oid).unwrap();
+    let tree=repo.find_tree(index.write_tree().unwrap()).unwrap();
     let signature=repo.signature().unwrap().to_owned();
     let message="merge conflict";
     // get the heads commits
     let head=repo.head().unwrap();
     let parents_commits=&[&head.peel_to_commit().unwrap()];
 
-    let _=repo.commit(Some("HEAD"), &signature, &signature, message, &tree, parents_commits);
+    match repo.commit(Some("HEAD"), &signature, &signature, message, &tree, parents_commits){
+        Ok(_val) => true,
+        Error => false,
+    }
 }
 fn return_files(condition: Status, repo: Repository)-> Option<Vec<String>>{
     let mut options=StatusOptions::new();
