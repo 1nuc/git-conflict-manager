@@ -20,6 +20,7 @@ fn main(){
 //TODO: detect the conflicted and accept the changes of the defined and passed branch
 //TODO: Make a function to make a commit
 //TODO: Make a function to show merge options 
+//TODO: make a function for staging
 
 #[allow(non_snake_case, unused_variables)]
 fn return_path(file_path: &Path) -> Option<Repository, > {
@@ -48,14 +49,24 @@ fn testing_conflict_detection(){
     // let branch_2=args[2].clone();
     let dir=env::current_dir().unwrap();
     if let Some(repo)=return_path(dir.as_path()){
-        let mut builder=CheckoutBuilder::new();
-        let checkout_builder=builder.use_ours(true);
         let mut index=repo.index().unwrap();
-        let _=repo.checkout_index(Some(&mut index), Some(checkout_builder));
-        println!("{:?}", repo.state());
-        // if index.has_conflicts(){
-        //     resolve_conflicts(index, repo);
-        // }
+        if index.has_conflicts(){
+            let repository=Arc::new(repo);
+            let mut builder=CheckoutBuilder::new();
+            let checkout_builder=builder.use_ours(true);
+            let repo=Arc::clone(&repository);
+            let files=return_files(Status::CONFLICTED, repository).unwrap();
+            files.iter().map(|x| {
+                let _=checkout_builder.path(x).force();
+            }).collect::<Vec<_>>();
+            let _=repo.checkout_index(Some(&mut index), Some(checkout_builder));
+            staging(&mut index, files);
+            match commit(index, repo){
+                true => println!("conflict is resolved"),
+                false => println!("error resolving the conflict"),
+            }
+            // resolve_conflicts(index, repo);
+        }
     }
 }
 #[allow(non_snake_case, unused_variables)]
@@ -113,7 +124,14 @@ fn resolve_conflicts(mut index: Index,repo: Repository){
     }
 }
 
-fn commit(mut index: Index, repo: Repository)-> bool{
+fn staging(index: &mut Index, files: Vec<String>){
+    files.iter().map(|x| {
+        let path=Path::new(x);
+        index.add_path(path).expect("Error adding the file to the staging area");
+        }).collect::<Vec<_>>();
+}
+
+fn commit(mut index: Index, repo: Arc<Repository>)-> bool{
     let _=index.write();
     let tree=repo.find_tree(index.write_tree().unwrap()).unwrap();
     let signature=repo.signature().unwrap().to_owned();
@@ -127,7 +145,7 @@ fn commit(mut index: Index, repo: Repository)-> bool{
         Error => false,
     }
 }
-fn return_files(condition: Status, repo: Repository)-> Option<Vec<String>>{
+fn return_files(condition: Status, repo: Arc<Repository>)-> Option<Vec<String>>{
     let mut options=StatusOptions::new();
     options.include_untracked(false).recurse_untracked_dirs(false);
     let status=repo.statuses(Some(&mut options)).unwrap();
@@ -149,5 +167,4 @@ fn return_index(repo: Repository) -> Option<Index,>{
         },
         Error => None,
     }
-
 }
