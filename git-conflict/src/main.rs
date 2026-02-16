@@ -1,3 +1,4 @@
+use git2::build::CheckoutBuilder;
 use git2::{Branch, BranchType, Commit, Error, Index, IndexEntry, MergeOptions, Repository, Status, StatusOptions};
 use std::fs::File;
 use std::io::Write;
@@ -17,6 +18,8 @@ fn main(){
 //TODO: make a manual merge
 //TODO: Return the commits of the branches to perform the merge
 //TODO: detect the conflicted and accept the changes of the defined and passed branch
+//TODO: Make a function to make a commit
+//TODO: Make a function to show merge options 
 
 #[allow(non_snake_case, unused_variables)]
 fn return_path(file_path: &Path) -> Option<Repository, > {
@@ -45,10 +48,14 @@ fn testing_conflict_detection(){
     // let branch_2=args[2].clone();
     let dir=env::current_dir().unwrap();
     if let Some(repo)=return_path(dir.as_path()){
-        let index=repo.index().unwrap();
-        if index.has_conflicts(){
-            resolve_conflicts(index, repo);
-        }
+        let mut builder=CheckoutBuilder::new();
+        let checkout_builder=builder.use_ours(true);
+        let mut index=repo.index().unwrap();
+        let _=repo.checkout_index(Some(&mut index), Some(checkout_builder));
+        println!("{:?}", repo.state());
+        // if index.has_conflicts(){
+        //     resolve_conflicts(index, repo);
+        // }
     }
 }
 #[allow(non_snake_case, unused_variables)]
@@ -102,10 +109,11 @@ fn resolve_conflicts(mut index: Index,repo: Repository){
         let entry=conflict.unwrap();
         println!("Our :{:?}", entry.our);
         println!("Theirs :{:?}", entry.their);
-        println!("Optiosn :{:?}", entry.ancestor);
-        index.add(&entry.our.unwrap());
+        let _=index.add(&entry.our.unwrap());
     }
+    let _=index.write();
     let tree_oid=index.write_tree().unwrap();
+    let blob=repo.find_blob(tree_oid);
     let tree=repo.find_tree(tree_oid).unwrap();
     let signature=repo.signature().unwrap().to_owned();
     let message="merge conflict";
@@ -113,7 +121,7 @@ fn resolve_conflicts(mut index: Index,repo: Repository){
     let head=repo.head().unwrap();
     let parents_commits=&[&head.peel_to_commit().unwrap()];
 
-    repo.commit(Some("HEAD"), &signature, &signature, message, &tree, parents_commits);
+    let _=repo.commit(Some("HEAD"), &signature, &signature, message, &tree, parents_commits);
 }
 fn return_files(condition: Status, repo: Repository)-> Option<Vec<String>>{
     let mut options=StatusOptions::new();
