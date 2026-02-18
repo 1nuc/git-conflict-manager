@@ -53,15 +53,21 @@ fn testing_conflict_detection(){
         if index.has_conflicts(){
             let repository=Arc::new(repo);
             let mut builder=CheckoutBuilder::new();
-            let checkout_builder=builder.use_ours(true);
+            let checkout_builder=builder.use_ours(true);//specify the checkout build options to use
+                                                        //the ours (head) reference for the version
+                                                        //control switching
             let repo=Arc::clone(&repository);
             let files=return_files(Status::CONFLICTED, repository).unwrap();
+            // specify the files for which the checkout is to be held for
             files.iter().map(|x| {
                 let _=checkout_builder.path(x).force();
             }).collect::<Vec<_>>();
-            let _=repo.checkout_index(Some(&mut index), Some(checkout_builder));
-            staging(&mut index, files);
-            match commit(index, repo){
+            let _=repo.checkout_index(Some(&mut index), Some(checkout_builder));//revert back the
+                                                                                //current index to
+                                                                                //the index built
+                                                                                //from (head)
+            staging(&mut index, files); //stage the changes
+            match commit(index, repo){//commit the changes
                 true => println!("conflict is resolved"),
                 false => println!("error resolving the conflict"),
             }
