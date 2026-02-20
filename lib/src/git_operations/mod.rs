@@ -1,3 +1,5 @@
+use git2::{Repository, MergeOptions, Index, Status,Error,Commit, StatusOptions, build::CheckoutBuilder};
+use std::{env,path::Path,sync::Arc};
 struct Branches{
     src_branch: String,
     dest_branch: String,
@@ -10,6 +12,11 @@ impl Branches{
            dest_branch: branch_2.to_string(),
        }
    } 
+}
+
+struct Repo{
+    path: Path,
+
 }
 
 //TODO: staging changes
