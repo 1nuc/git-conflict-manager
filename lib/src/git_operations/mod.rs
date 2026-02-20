@@ -16,9 +16,36 @@ impl Branches{
 
 struct Repo{
     path: Path,
-
+    repo: Repository,
+    index: Index,
+    branches: Branches,
 }
 
+impl Repo{
+
+    //TODO: Returning the directory path
+
+
+    fn return_path
+    fn return_repo() -> Option<Repository, > {
+       match Repository::discover(file_path){
+           Ok(repo) => {
+               if let Some(path)=repo.workdir(){
+                   let path_: &Path= path;
+                   Some(repo)
+               }
+               else{
+                   println!("no path found for this repo");
+                   None
+               }
+           }
+           Error => {
+               println!("Unable to find the repository path");
+               None
+           }
+       }
+    }
+}
 //TODO: staging changes
 
 fn staging(index: &mut Index, files: Vec<String>){
@@ -69,26 +96,6 @@ fn merge(repo: Repository,branch_1_commit: Commit, branch_2_commit: Commit) -> R
             Error
         },
     }
-}
-//TODO: Returning the directory path
-
-fn return_path(file_path: &Path) -> Option<Repository, > {
-   match Repository::discover(file_path){
-       Ok(repo) => {
-           if let Some(path)=repo.workdir(){
-               let path_: &Path= path;
-               Some(repo)
-           }
-           else{
-               println!("no path found for this repo");
-               None
-           }
-       }
-       Error => {
-           println!("Unable to find the repository path");
-           None
-       }
-   }
 }
 //TODO: a function to show merge options
 
