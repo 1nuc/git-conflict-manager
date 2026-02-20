@@ -14,19 +14,21 @@ impl Branches{
    } 
 }
 
-struct Repo{
-    path: Path,
+struct Repo<'a>{
+    path: &'a Path,
     repo: Repository,
     index: Index,
     branches: Branches,
 }
 
-impl Repo{
+impl <'a>Repo<'a>{
 
     //TODO: Returning the directory path
 
-
-    fn return_path
+    fn return_path() -> &'a Path{
+        let path: &'a Path=env::current_dir().unwrap().as_path();
+        path
+    }
     fn return_repo() -> Option<Repository, > {
        match Repository::discover(file_path){
            Ok(repo) => {
