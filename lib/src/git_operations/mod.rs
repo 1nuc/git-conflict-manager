@@ -1,4 +1,4 @@
-use git2::{Repository, MergeOptions, Index, Status,Error,Commit, StatusOptions, build::CheckoutBuilder};
+use git2::{Branch, Commit, Error, Index, MergeOptions, Repository, Status, StatusOptions, build::CheckoutBuilder};
 use std::{env,path::{Path, PathBuf},sync::Arc};
 struct Branches{
     src_branch: String,
@@ -23,10 +23,18 @@ struct Repo{
 
 #[allow(non_snake_case)]
 impl Repo{
-
     //init
-    fn init() -> Self{
-
+    fn init(branch_1: &str, branch_2: &str) -> Self{
+        let file_path=Self::return_path();
+        let Repo=Self::return_repo(file_path).expect("unable to find a git repository");
+        let repo_path=Repo.workdir().expect("unable to find the repository path").to_path_buf();
+        let Index=Repo.index().expect("unable to find the index");
+        Self{
+            path: repo_path,
+            repo: Repo,
+            index: Index,
+            branches: Branches::init(branch_1, branch_2),
+        }
     }
 
     //TODO: return the directory as an environment variable
