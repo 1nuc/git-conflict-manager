@@ -1,5 +1,5 @@
 use git2::{Repository, MergeOptions, Index, Status,Error,Commit, StatusOptions, build::CheckoutBuilder};
-use std::{env,path::Path,sync::Arc};
+use std::{env,path::{Path, PathBuf},sync::Arc};
 struct Branches{
     src_branch: String,
     dest_branch: String,
@@ -14,36 +14,39 @@ impl Branches{
    } 
 }
 
-struct Repo<'a>{
-    path: &'a Path,
+struct Repo{
+    path: PathBuf,
     repo: Repository,
     index: Index,
     branches: Branches,
 }
 
-impl <'a>Repo<'a>{
+#[allow(non_snake_case)]
+impl Repo{
 
-    //TODO: Returning the directory path
+    //init
+    fn init() -> Self{
 
-    fn return_path() -> &'a Path{
-        let path: &'a Path=env::current_dir().unwrap().as_path();
+    }
+
+    //TODO: return the directory as an environment variable
+    fn return_path() -> PathBuf{
+        let path=env::current_dir().unwrap();
         path
     }
-    fn return_repo() -> Option<Repository, > {
+    //TODO: Returning the directory path
+    fn return_repo(file_path: PathBuf) -> Option<Repository, > {
        match Repository::discover(file_path){
            Ok(repo) => {
-               if let Some(path)=repo.workdir(){
-                   let path_: &Path= path;
+               if repo.workdir().is_some(){
                    Some(repo)
                }
                else{
-                   println!("no path found for this repo");
-                   None
+                   panic!("no path found for this repo");
                }
            }
            Error => {
-               println!("Unable to find the repository path");
-               None
+               panic!("Unable to find the repository path");
            }
        }
     }
