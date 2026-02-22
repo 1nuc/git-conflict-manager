@@ -147,6 +147,8 @@ impl <'a>GitOps<'a> for Repo<'a>{
         }).collect::<Vec<_>>();
     }
 
+    fn resolve_conflict(){}
+
     fn testing_conflict_detection(){
         let args: Vec<String>=env::args().collect();
         // let branch_1=args[1].clone();
