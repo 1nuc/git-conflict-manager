@@ -1,4 +1,5 @@
 use git2::{Commit, Error, Index, MergeOptions, Repository, Status, StatusOptions, build::CheckoutBuilder};
+use crate::GitOps;
 use std::{env,path::{Path, PathBuf},sync::Arc};
 struct Branches{
     src_branch: String,
@@ -60,10 +61,10 @@ impl Repo{
     }
 }
 
-impl Repo{
+#[allow(non_snake_case)]
+impl GitOps for Repo{
 
     //TODO: staging changes
-
     fn staging(&mut self, files: Vec<String>){
         files.iter().map(|x| {
             let path=Path::new(x);
@@ -72,26 +73,26 @@ impl Repo{
     }
     //TODO: Making a commit
 
-    fn commit(&self,mut index: Index, repo: Arc<Repository>)-> bool{
-        let _=index.write();
-        let tree=repo.find_tree(index.write_tree().unwrap()).unwrap();
-        let signature=repo.signature().unwrap().to_owned();
+    fn commit(&mut self)-> bool{
+        let _=self.index.write();
+        let tree=self.repo.find_tree(self.index.write_tree().unwrap()).unwrap();
+        let signature=self.repo.signature().unwrap().to_owned();
         let message="merge conflict";
         // get the heads commits
-        let head=repo.head().unwrap();
+        let head=self.repo.head().unwrap();
         let parents_commits=&[&head.peel_to_commit().unwrap()];
 
-        match repo.commit(Some("HEAD"), &signature, &signature, message, &tree, parents_commits){
+        match self.repo.commit(Some("HEAD"), &signature, &signature, message, &tree, parents_commits){
             Ok(_val) => true,
-            Error => false,
+            _Error => false,
         }
     }
     //TODO: return the file with conditions  
 
-    fn return_files(condition: Status, repo: Arc<Repository>)-> Option<Vec<String>>{
+    fn return_files(&self,condition: Status)-> Option<Vec<String>>{
         let mut options=StatusOptions::new();
         options.include_untracked(false).recurse_untracked_dirs(false);
-        let status=repo.statuses(Some(&mut options)).unwrap();
+        let status=self.repo.statuses(Some(&mut options)).unwrap();
         let mut list_of_conflicted_files=Vec::new();
         for i in status.iter(){
             if i.status().contains(condition) && let Some(path)=i.path(){
@@ -102,9 +103,9 @@ impl Repo{
     }
     //TODO: Merge function
 
-    fn merge(repo: Repository,branch_1_commit: Commit, branch_2_commit: Commit) -> Result<Index, Error>{
+    fn merge(&self,branch_1_commit: Commit, branch_2_commit: Commit) -> Result<Index, Error>{
         let merge_options=MergeOptions::new();
-        match repo.merge_commits(&branch_1_commit,&branch_2_commit,Some(&merge_options)) {
+        match self.repo.merge_commits(&branch_1_commit,&branch_2_commit,Some(&merge_options)) {
             Ok(index) =>{
                 Ok(index)
             },
