@@ -117,6 +117,26 @@ impl GitOps for Repo{
     }
     //TODO: a function to show merge options
 
+    fn checkout_type<'a>(&self, mut builder: CheckoutBuilder<'a>)->Option<CheckoutBuilder<'a>>{
+        let head_branch= self.repo.head()
+            .expect("unable to return the reference")
+            .shorthand()
+            .expect("unable to retrieve the branch namepointed by the head")
+            .to_string();
+        //checking the branch pointed by the head to build the checkout
+        if head_branch!=self.branches.src_branch && head_branch!=self.branches.dest_branch{
+            None 
+        }
+        else if head_branch==self.branches.dest_branch{
+            builder.use_theirs(true);
+            Some(builder)
+        }
+        else {
+            builder.use_ours(true);
+            Some(builder)
+        }
+    }
+
     fn testing_conflict_detection(){
         let args: Vec<String>=env::args().collect();
         // let branch_1=args[1].clone();
@@ -131,6 +151,7 @@ impl GitOps for Repo{
                                                             //the ours (head) reference for the version
                                                             //control switching
                 let repo=Arc::clone(&repository);
+                //add files paths to be checked out with the new merge 
                 let files=return_files(Status::CONFLICTED, repository).unwrap();
                 // specify the files for which the checkout is to be held for
                 files.iter().map(|x| {
