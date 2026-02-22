@@ -15,15 +15,16 @@ impl Branches{
    } 
 }
 //creating a struct that contains the essential details for a branch 
-struct Repo{
+struct Repo<'a>{
     path: PathBuf,
     repo: Repository,
     index: Index,
     branches: Branches,
+    builder: CheckoutBuilder<'a>,
 }
 
 #[allow(non_snake_case)]
-impl Repo{
+impl <'a>Repo<'a>{
     //init
     fn init(branch_1: &str, branch_2: &str) -> Self{
         let file_path=Self::return_path();
@@ -36,6 +37,7 @@ impl Repo{
             repo: Repo,
             index: Index,
             branches: Branches::init(branch_1, branch_2),
+            builder: CheckoutBuilder::new(),
         }
     }
 
@@ -63,7 +65,7 @@ impl Repo{
 }
 
 #[allow(non_snake_case)]
-impl GitOps for Repo{
+impl <'a>GitOps<'a> for Repo<'a>{
 
     //TODO: staging changes
     fn staging(&mut self, files: Vec<String>){
@@ -117,7 +119,7 @@ impl GitOps for Repo{
     }
     //TODO: a function to show merge options
 
-    fn checkout_type<'a>(&self, mut builder: CheckoutBuilder<'a>)->Option<CheckoutBuilder<'a>>{
+    fn checkout_type(&mut self){
         let head_branch= self.repo.head()
             .expect("unable to return the reference")
             .shorthand()
@@ -125,16 +127,24 @@ impl GitOps for Repo{
             .to_string();
         //checking the branch pointed by the head to build the checkout
         if head_branch!=self.branches.src_branch && head_branch!=self.branches.dest_branch{
-            None 
+           panic!("head is not pointing to any branch"); 
         }
         else if head_branch==self.branches.dest_branch{
-            builder.use_theirs(true);
-            Some(builder)
+            self.builder.use_theirs(true);
         }
         else {
-            builder.use_ours(true);
-            Some(builder)
+            self.builder.use_ours(true);
         }
+    }
+
+    fn checkout_files(&mut self){
+
+        //add files paths to be checked out with the new merge 
+        let files=self.return_files(Status::CONFLICTED).expect("files cannot be found");
+        // specify the files for which the checkout is to be held for
+        files.iter().map(|x| {
+            let _=self.builder.path(x).force();
+        }).collect::<Vec<_>>();
     }
 
     fn testing_conflict_detection(){
@@ -150,17 +160,8 @@ impl GitOps for Repo{
                 let checkout_builder=builder.use_ours(true);//specify the checkout build options to use
                                                             //the ours (head) reference for the version
                                                             //control switching
-                let repo=Arc::clone(&repository);
-                //add files paths to be checked out with the new merge 
-                let files=return_files(Status::CONFLICTED, repository).unwrap();
-                // specify the files for which the checkout is to be held for
-                files.iter().map(|x| {
-                    let _=checkout_builder.path(x).force();
-                }).collect::<Vec<_>>();
                 let _=repo.checkout_index(Some(&mut index), Some(checkout_builder));//revert back the
-                                                                                    //current index to
-                                                                                    //the index built
-                                                                                    //from (head)
+                let repo=Arc::clone(&repository);
                 staging(&mut index, files); //stage the changes
                 match commit(index, repo){//commit the changes
                     true => println!("conflict is resolved"),
