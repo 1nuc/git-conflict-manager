@@ -6,7 +6,8 @@ pub trait GitOps <'a>{
     fn commit(&mut self)-> bool;
     fn return_files(&self,condition: Status)-> Option<Vec<String>>;
     fn merge(&self,branch_1_commit: Commit, branch_2_commit: Commit) -> Result<Index, Error>;
-    fn checkout_type(&mut self);
-    fn checkout_files(&mut self);
+    fn checkout_local(&mut self);
+    fn checkout_foreign(&mut self);
+    fn checkout_files(&mut self) -> Vec<String>;
     fn resolve_conflict();
 }

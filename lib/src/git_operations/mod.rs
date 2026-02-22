@@ -117,9 +117,8 @@ impl <'a>GitOps<'a> for Repo<'a>{
             },
         }
     }
-    //TODO: a function to show merge options
 
-    fn checkout_type(&mut self){
+    fn checkout_local(&mut self){
         let head_branch= self.repo.head()
             .expect("unable to return the reference")
             .shorthand()
@@ -129,15 +128,28 @@ impl <'a>GitOps<'a> for Repo<'a>{
         if head_branch!=self.branches.src_branch && head_branch!=self.branches.dest_branch{
            panic!("head is not pointing to any branch"); 
         }
-        else if head_branch==self.branches.dest_branch{
-            self.builder.use_theirs(true);
-        }
         else {
             self.builder.use_ours(true);
         }
     }
 
-    fn checkout_files(&mut self){
+
+    fn checkout_foreign(&mut self){
+        let head_branch= self.repo.head()
+            .expect("unable to return the reference")
+            .shorthand()
+            .expect("unable to retrieve the branch namepointed by the head")
+            .to_string();
+        //checking the branch pointed by the head to build the checkout
+        if head_branch!=self.branches.src_branch && head_branch!=self.branches.dest_branch{
+           panic!("head is not pointing to any branch"); 
+        }
+        else {
+            self.builder.use_theirs(true);
+        }
+    }
+
+    fn checkout_files(&mut self) -> Vec<String>{
 
         //add files paths to be checked out with the new merge 
         let files=self.return_files(Status::CONFLICTED).expect("files cannot be found");
@@ -145,6 +157,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
         files.iter().map(|x| {
             let _=self.builder.path(x).force();
         }).collect::<Vec<_>>();
+        files
     }
 
     fn resolve_conflict(){}
