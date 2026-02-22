@@ -30,6 +30,7 @@ impl Repo{
         let Repo=Self::return_repo(file_path).expect("unable to find a git repository");
         let repo_path=Repo.workdir().expect("unable to find the repository path").to_path_buf();
         let Index=Repo.index().expect("unable to find the index");
+        //prepare the details needed to perform git operations
         Self{
             path: repo_path,
             repo: Repo,
