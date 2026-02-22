@@ -44,8 +44,7 @@ impl <'a>Repo<'a>{
 
     //TODO: return the directory as an environment variable
     fn return_path() -> PathBuf{
-        let path=env::current_dir().unwrap();
-        path
+        env::current_dir().unwrap()
     }
     //TODO: Returning the directory path
     fn return_repo(file_path: PathBuf) -> Option<Repository, > {
