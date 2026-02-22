@@ -1,4 +1,4 @@
-use git2::{Commit, Error, Index, Status, build::CheckoutBuilder};
+use git2::{Commit, Error, Index, Status};
 mod git_operations;
 
 pub trait GitOps <'a>{
@@ -9,5 +9,5 @@ pub trait GitOps <'a>{
     fn checkout_local(&mut self);
     fn checkout_foreign(&mut self);
     fn checkout_files(&mut self) -> Vec<String>;
-    fn resolve_conflict();
+    fn resolve_conflict_by_discarding(&mut self);
 }

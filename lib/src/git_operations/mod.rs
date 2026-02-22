@@ -1,6 +1,7 @@
 use git2::{Commit, Error, Index, MergeOptions, Repository, Status, StatusOptions, build::CheckoutBuilder};
 use crate::GitOps;
-use std::{env,path::{Path, PathBuf},sync::Arc};
+use std::{env,path::{Path, PathBuf}};
+
 struct Branches{
     src_branch: String,
     dest_branch: String,
@@ -69,7 +70,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
 
     //TODO: staging changes
     fn staging(&mut self, files: Vec<String>){
-        files.iter().map(|x| {
+        let _=files.iter().map(|x| {
             let path=Path::new(x);
             self.index.add_path(path).expect("Error adding the file to the staging area");
             }).collect::<Vec<_>>();
@@ -90,8 +91,8 @@ impl <'a>GitOps<'a> for Repo<'a>{
             _Error => false,
         }
     }
-    //TODO: return the file with conditions  
 
+    //TODO: return the file with conditions  
     fn return_files(&self,condition: Status)-> Option<Vec<String>>{
         let mut options=StatusOptions::new();
         options.include_untracked(false).recurse_untracked_dirs(false);
@@ -150,40 +151,40 @@ impl <'a>GitOps<'a> for Repo<'a>{
     }
 
     fn checkout_files(&mut self) -> Vec<String>{
-
         //add files paths to be checked out with the new merge 
         let files=self.return_files(Status::CONFLICTED).expect("files cannot be found");
         // specify the files for which the checkout is to be held for
-        files.iter().map(|x| {
+        let _=files.iter().map(|x| {
             let _=self.builder.path(x).force();
         }).collect::<Vec<_>>();
         files
     }
 
-    fn resolve_conflict(){}
-
-    fn testing_conflict_detection(){
-        let args: Vec<String>=env::args().collect();
-        // let branch_1=args[1].clone();
-        // let branch_2=args[2].clone();
-        let dir=env::current_dir().unwrap();
-        if let Some(repo)=return_path(dir.as_path()){
-            let mut index=repo.index().unwrap();
-            if index.has_conflicts(){
-                let repository=Arc::new(repo);
-                let mut builder=CheckoutBuilder::new();
-                let checkout_builder=builder.use_ours(true);//specify the checkout build options to use
-                                                            //the ours (head) reference for the version
-                                                            //control switching
-                let _=repo.checkout_index(Some(&mut index), Some(checkout_builder));//revert back the
-                let repo=Arc::clone(&repository);
-                staging(&mut index, files); //stage the changes
-                match commit(index, repo){//commit the changes
-                    true => println!("conflict is resolved"),
-                    false => println!("error resolving the conflict"),
-                }
-                // resolve_conflicts(index, repo);
-            }
+    //resolves the conflict between two branches by discarding the changes of either two branches
+    fn resolve_conflict_by_discarding(&mut self){
+        let _=self.repo.checkout_index(Some(&mut self.index), Some(&mut self.builder));//revert back the index to match the index to the checkout builder
+        let files=self.checkout_files();
+        self.staging(files); //stage the changes
+        match self.commit(){//commit the changes
+            true => println!("conflict is resolved"),
+            false => panic!("error resolving the conflict"),
         }
     }
+    // fn testing_conflict_detection(){
+    //     let args: Vec<String>=env::args().collect();
+    //     // let branch_1=args[1].clone();
+    //     // let branch_2=args[2].clone();
+    //     let dir=env::current_dir().unwrap();
+    //     if let Some(repo)=return_path(dir.as_path()){
+    //         let mut index=repo.index().unwrap();
+    //         if index.has_conflicts(){
+    //             let repository=Arc::new(repo);
+    //             let mut builder=CheckoutBuilder::new();
+    //             let checkout_builder=builder.use_ours(true);//specify the checkout build options to use
+    //                                                         //the ours (head) reference for the version
+    //                                                         //control switching
+    //             // resolve_conflicts(index, repo);
+    //         }
+    //     }
+    // }
 }
