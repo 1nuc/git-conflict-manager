@@ -8,7 +8,7 @@ fn main(){
     
     options.iter().enumerate().map(|(i,x)| {
         println!("Option {}: {}",i,x.italic().blue().bold());
-    });
+    }).collect::<Vec<_>>();
     println!("Select the option number: ");
     let mut line=String::new();
     io::stdin().read_line(&mut line).expect("error reading the line");
@@ -17,7 +17,7 @@ fn main(){
         println!("Error You should only enter an integer");
         options.iter().enumerate().map(|(i,x)| {
                 println!("Option {}: {}",i,x.italic().blue().bold());
-            });
+            }).collect::<Vec<_>>();
         println!("Select the option number: ");
         io::stdin().read_line(&mut line).expect("error reading the line");
     }
@@ -27,7 +27,7 @@ fn main(){
             println!("Error You should only a valid option");
             options.iter().enumerate().map(|(i,x)| {
                     println!("Option {}: {}",i,x.italic().blue().bold());
-                });
+                }).collect::<Vec<_>>();
             println!("Select the option number: ");
             io::stdin().read_line(&mut line).expect("error reading the line");
         },
@@ -35,7 +35,7 @@ fn main(){
             println!("Error You should only a valid option");
             options.iter().enumerate().map(|(i,x)| {
                     println!("Option {}: {}",i,x.italic().blue().bold());
-                });
+                }).collect::<Vec<_>>();
             println!("Select the option number: ");
             io::stdin().read_line(&mut line).expect("error reading the line");
         },
@@ -43,7 +43,7 @@ fn main(){
             println!("feature has not yet been developed");
             options.iter().enumerate().map(|(i,x)| {
                     println!("Option {}: {}",i,x.italic().blue().bold());
-                });
+                }).collect::<Vec<_>>();
             println!("Select the option number: ");
             io::stdin().read_line(&mut line).expect("error reading the line");
         },
@@ -51,7 +51,7 @@ fn main(){
             println!("Error You should only a valid option");
             options.iter().enumerate().map(|(i,x)| {
                     println!("Option {}: {}",i,x.italic().blue().bold());
-                });
+                }).collect::<Vec<_>>();
             println!("Select the option number: ");
             io::stdin().read_line(&mut line).expect("error reading the line");
         },
