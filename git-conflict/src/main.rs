@@ -33,7 +33,7 @@ fn main(){
         show_example();
     }
 
-    let git_control=Repo::init(args[1].clone(), args[2].clone()); 
+    let mut git_control=Repo::init(args[1].clone(), args[2].clone()); 
 
     if !git_control.does_conflict_exists(){
         println!("{}","There is no conflict in your index".italic().bold().red());
@@ -51,13 +51,13 @@ fn main(){
     }
     match opt{
         1 =>{
-            git_control.checkout_local()
+            git_control.checkout_local().resolve_conflict_by_discarding();
         },
         2 =>{
-
+            git_control.checkout_foreign().resolve_conflict_by_discarding();
         },
         3 =>{
-
+            println!("feature has not yet been developed");
         },
         _ =>warn!("undefined error"),
     }
