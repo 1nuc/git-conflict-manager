@@ -1,9 +1,10 @@
-// use git_1nuc::{git_operations::Repo, GitOps};
+use git_1nuc::{git_operations::Repo, GitOps};
 use colored::*;
-use std::{io, option};
+use std::{io};
+
 fn option_panel(welcome_msg: &str, msg: &str) -> String{
     let options=["Keep Local Head Changes", "Keep Foreign Branch Changes", "Remove Markers and Keep Both Changes (Soon)"];
-    println!("{},\n {}: ", welcome_msg, msg); 
+    println!("{},\n{}: ", welcome_msg, msg); 
     options.iter().enumerate().map(|(i,x)| {
         println!("Option {}: {}",i,x.italic().blue().bold());
     }).collect::<Vec<_>>();
@@ -16,6 +17,7 @@ fn checking_value(value: i32) -> bool{
     value <3 && value >1
 }
 fn main(){
+    let git_control= 
     let welcome_msg="Git Conflict Manager.... The tool for ultimate file control".italic().bold().bold().green();
 
     let mut line=option_panel(&welcome_msg, "which conflict resolution you would like to choose");
@@ -24,8 +26,11 @@ fn main(){
     }
     let mut opt=line.trim_end().parse::<i32>().unwrap();
     while !checking_value(opt){
-        line=option_panel(&welcome_msg, "You should only select a valid number");
+        line=option_panel(&welcome_msg,"You should only select a valid number");
         opt=line.trim_end().parse::<i32>().unwrap();
+    }
+    match opt{
+
     }
 }
 

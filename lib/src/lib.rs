@@ -1,4 +1,6 @@
-use git2::{Commit, Error, Index, Status};
+use std::path::PathBuf;
+
+use git2::{Commit, Error, Index, Repository, Status};
 pub mod git_operations;
 
 pub trait GitOps <'a>{
@@ -10,4 +12,10 @@ pub trait GitOps <'a>{
     fn checkout_foreign(&mut self);
     fn checkout_files(&mut self) -> Vec<String>;
     fn resolve_conflict_by_discarding(&mut self);
+    fn does_conflict_exists(&self) -> bool;
+}
+pub trait Initialize {
+    fn init(branch_1: &str, branch_2: &str) -> Self;
+    fn return_path() -> PathBuf;
+    fn return_repo(file_path: PathBuf) -> Option<Repository>;
 }

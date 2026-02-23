@@ -1,5 +1,5 @@
 use git2::{Commit, Error, Index, MergeOptions, Repository, Status, StatusOptions, build::CheckoutBuilder};
-use crate::GitOps;
+use crate::{GitOps, Initialize};
 use std::{env,path::{Path, PathBuf}};
 
 struct Branches{
@@ -25,7 +25,7 @@ pub struct Repo<'a>{
 }
 
 #[allow(non_snake_case)]
-impl <'a>Repo<'a>{
+impl <'a> Initialize for Repo<'a>{
     //init
     fn init(branch_1: &str, branch_2: &str) -> Self{
         let file_path=Self::return_path();
@@ -47,7 +47,7 @@ impl <'a>Repo<'a>{
         env::current_dir().unwrap()
     }
     //TODO: Returning the directory path
-    fn return_repo(file_path: PathBuf) -> Option<Repository, > {
+    fn return_repo(file_path: PathBuf) -> Option<Repository>{
        match Repository::discover(file_path){
            Ok(repo) => {
                if repo.workdir().is_some(){
@@ -154,7 +154,6 @@ impl <'a>GitOps<'a> for Repo<'a>{
             self.builder.use_theirs(true);
         }
     }
-
     //this function has an embedding implementation
     fn checkout_files(&mut self) -> Vec<String>{
         //add files paths to be checked out with the new merge 
@@ -174,6 +173,14 @@ impl <'a>GitOps<'a> for Repo<'a>{
         match self.commit(){//commit the changes
             true => println!("conflict is resolved"),
             false => panic!("error resolving the conflict"),
+        }
+    }
+    fn does_conflict_exists(&self) -> bool{
+        if self.index.has_conflicts(){
+            true
+        }
+        else{
+           false 
         }
     }
     //TODO: resolve conflict by merging the changes from both branches : e.g. delete the conflict
