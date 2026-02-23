@@ -169,8 +169,8 @@ impl <'a>GitOps<'a> for Repo<'a>{
 
     //resolves the conflict between two branches by discarding the changes of either two branches
     fn resolve_conflict_by_discarding(&mut self){
-        let _=self.repo.checkout_index(Some(&mut self.index), Some(&mut self.builder));//revert back the index to match the index to the checkout builder
         let files=self.checkout_files();
+        let _=self.repo.checkout_index(Some(&mut self.index), Some(&mut self.builder));//revert back the index to match the index to the checkout builder
         self.staging(files); //stage the changes
         match self.commit(){//commit the changes
             true => println!("conflict is resolved"),

@@ -6,8 +6,8 @@ use std::{env, io};
 fn option_panel(welcome_msg: &str, msg: &str) -> String{
     let options=["Keep Local Head Changes", "Keep Foreign Branch Changes", "Remove Markers and Keep Both Changes (Soon)"];
     println!("{},\n{}: ", welcome_msg, msg); 
-    let _=options.iter().enumerate().map(|(i,x)| {
-        println!("Option {}: {}",1+i,x.italic().blue().bold());
+    options.iter().enumerate().map(|(i,x)| {
+        println!("Option {}: {}",i,x.italic().blue().bold());
     }).collect::<Vec<_>>();
     println!("Select the option number: ");
     let mut line=String::new();
@@ -22,7 +22,7 @@ fn show_example(){
     warn!("{}","rewrite the command with specifying the name of the branches".italic().bold().yellow());
 }
 fn checking_value(value: i32) -> bool{
-    value <3 && value >0
+    value <3 && value >1
 }
 
 fn main(){
@@ -37,6 +37,7 @@ fn main(){
 
     if !git_control.does_conflict_exists(){
         println!("{}","There is no conflict in your index".italic().bold().red());
+        return;
     }
     let welcome_msg="Git Conflict Manager.... The tool for ultimate file control".italic().bold().bold().green();
 
