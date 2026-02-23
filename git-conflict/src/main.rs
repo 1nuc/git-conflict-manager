@@ -1,5 +1,6 @@
 use git_1nuc::{git_operations::Repo, GitOps, Initialize};
 use colored::*;
+use log::*;
 use std::{env, io};
 
 fn option_panel(welcome_msg: &str, msg: &str) -> String{
@@ -13,15 +14,27 @@ fn option_panel(welcome_msg: &str, msg: &str) -> String{
     io::stdin().read_line(&mut line).expect("error reading the line");
     line
 }
+fn show_example(){
+    warn!("{}","Example: cargo r src_branch dest_branch".italic().bold().yellow());  
+    warn!("{}","src_branch is the branch is the branch you are currently at whcih is pointed by head".italic().bold().yellow());
+    warn!("{}","to check for your source branch type git status".italic().bold().yellow());
+    warn!("{}","dest_branch is the branch you are trying to merge".italic().bold().yellow()); 
+    warn!("{}","rewrite the command with specifying the name of the branches".italic().bold().yellow());
+}
 fn checking_value(value: i32) -> bool{
     value <3 && value >1
 }
+
 fn main(){
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
     let args: Vec<String>=env::args().collect();
     if args.len() <3 {
-        panic!("You have to specify the names of the conflicted branches");
+        println!("{}","You have to specify the names of the conflicted branches".italic().bold().red());
+        show_example();
     }
+
     let git_control=Repo::init(args[1].clone(), args[2].clone()); 
+
     let welcome_msg="Git Conflict Manager.... The tool for ultimate file control".italic().bold().bold().green();
 
     let mut line=option_panel(&welcome_msg, "which conflict resolution you would like to choose");
@@ -34,8 +47,18 @@ fn main(){
         opt=line.trim_end().parse::<i32>().unwrap();
     }
     match opt{
+        1 =>{
 
+        },
+        2 =>{
+
+        },
+        3 =>{
+
+        },
+        _ =>warn!("undefined error"),
     }
+
 }
 
 
