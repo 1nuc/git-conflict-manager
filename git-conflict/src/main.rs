@@ -35,6 +35,9 @@ fn main(){
 
     let git_control=Repo::init(args[1].clone(), args[2].clone()); 
 
+    if !git_control.does_conflict_exists(){
+        println!("{}","There is no conflict in your index".italic().bold().red());
+    }
     let welcome_msg="Git Conflict Manager.... The tool for ultimate file control".italic().bold().bold().green();
 
     let mut line=option_panel(&welcome_msg, "which conflict resolution you would like to choose");
@@ -48,7 +51,7 @@ fn main(){
     }
     match opt{
         1 =>{
-
+            git_control.checkout_local()
         },
         2 =>{
 

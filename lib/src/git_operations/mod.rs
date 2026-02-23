@@ -123,7 +123,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
 
     // In most cases this is the prefered choice for programmers
     // The checkout is the first step towards changing the index
-    fn checkout_local(&mut self){
+    fn checkout_local(&mut self) -> &mut Self{
         let head_branch= self.repo.head()
             .expect("unable to return the reference")
             .shorthand()
@@ -136,11 +136,12 @@ impl <'a>GitOps<'a> for Repo<'a>{
         else {
             self.builder.use_ours(true);
         }
+        self
     }
 
 
     // A rarely used but useful option
-    fn checkout_foreign(&mut self){
+    fn checkout_foreign(&mut self) -> &mut Self{
         let head_branch= self.repo.head()
             .expect("unable to return the reference")
             .shorthand()
@@ -153,6 +154,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
         else {
             self.builder.use_theirs(true);
         }
+        self
     }
     //this function has an embedding implementation
     fn checkout_files(&mut self) -> Vec<String>{
@@ -176,12 +178,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
         }
     }
     fn does_conflict_exists(&self) -> bool{
-        if self.index.has_conflicts(){
-            true
-        }
-        else{
-           false 
-        }
+        self.index.has_conflicts()
     }
     //TODO: resolve conflict by merging the changes from both branches : e.g. delete the conflict
     //markers
