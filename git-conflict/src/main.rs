@@ -1,7 +1,61 @@
 // use git_1nuc::{git_operations::Repo, GitOps};
 use colored::*;
+use std::io;
 fn main(){
     let welcome_msg="Git Conflict Manager.... The tool for ultimate file control".italic().bold().bold().green();
+    let options=["Keep Local Head Changes", "Keep Foreign Branch Changes", "Remove Markers and Keep Both Changes (Soon)"];
+    println!("{},\n Which conflict resolution method you want: ", welcome_msg); 
+    
+    options.iter().enumerate().map(|(i,x)| {
+        println!("Option {}: {}",i,x.italic().blue().bold());
+    });
+    println!("Select the option number: ");
+    let mut line=String::new();
+    io::stdin().read_line(&mut line).expect("error reading the line");
+
+    while line.trim_end().parse::<i32>().is_err(){
+        println!("Error You should only enter an integer");
+        options.iter().enumerate().map(|(i,x)| {
+                println!("Option {}: {}",i,x.italic().blue().bold());
+            });
+        println!("Select the option number: ");
+        io::stdin().read_line(&mut line).expect("error reading the line");
+    }
+    let opt=line.trim_end().parse::<i32>().unwrap();
+    match opt {
+        s if s<1 => {
+            println!("Error You should only a valid option");
+            options.iter().enumerate().map(|(i,x)| {
+                    println!("Option {}: {}",i,x.italic().blue().bold());
+                });
+            println!("Select the option number: ");
+            io::stdin().read_line(&mut line).expect("error reading the line");
+        },
+        s if s> 3 => {
+            println!("Error You should only a valid option");
+            options.iter().enumerate().map(|(i,x)| {
+                    println!("Option {}: {}",i,x.italic().blue().bold());
+                });
+            println!("Select the option number: ");
+            io::stdin().read_line(&mut line).expect("error reading the line");
+        },
+        3 => {
+            println!("feature has not yet been developed");
+            options.iter().enumerate().map(|(i,x)| {
+                    println!("Option {}: {}",i,x.italic().blue().bold());
+                });
+            println!("Select the option number: ");
+            io::stdin().read_line(&mut line).expect("error reading the line");
+        },
+        _ =>{
+            println!("Error You should only a valid option");
+            options.iter().enumerate().map(|(i,x)| {
+                    println!("Option {}: {}",i,x.italic().blue().bold());
+                });
+            println!("Select the option number: ");
+            io::stdin().read_line(&mut line).expect("error reading the line");
+        },
+    }
 }
 
 
