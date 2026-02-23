@@ -1,5 +1,5 @@
 use git2::{Commit, Error, Index, Status};
-mod git_operations;
+pub mod git_operations;
 
 pub trait GitOps <'a>{
     fn staging(&mut self, files: Vec<String>);

@@ -16,7 +16,7 @@ impl Branches{
    } 
 }
 //creating a struct that contains the essential details for a branch 
-struct Repo<'a>{
+pub struct Repo<'a>{
     path: PathBuf,
     repo: Repository,
     index: Index,
