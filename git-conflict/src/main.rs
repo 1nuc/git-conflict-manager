@@ -18,6 +18,9 @@ fn checking_value(value: i32) -> bool{
 }
 fn main(){
     let args: Vec<String>=env::args().collect();
+    if args.len() <3 {
+        panic!("You have to specify the names of the conflicted branches");
+    }
     let git_control=Repo::init(args[1].clone(), args[2].clone()); 
     let welcome_msg="Git Conflict Manager.... The tool for ultimate file control".italic().bold().bold().green();
 

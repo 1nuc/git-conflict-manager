@@ -8,7 +8,7 @@ struct Branches{
 }
 
 impl Branches{
-   fn init(branch_1: &str, branch_2: &str) -> Self{
+   fn init(branch_1: String, branch_2: String) -> Self{
        Branches{
            src_branch: branch_1.to_string(),
            dest_branch: branch_2.to_string(),
