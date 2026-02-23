@@ -1,60 +1,31 @@
 // use git_1nuc::{git_operations::Repo, GitOps};
 use colored::*;
-use std::io;
-fn main(){
-    let welcome_msg="Git Conflict Manager.... The tool for ultimate file control".italic().bold().bold().green();
+use std::{io, option};
+fn option_panel(welcome_msg: &str, msg: &str) -> String{
     let options=["Keep Local Head Changes", "Keep Foreign Branch Changes", "Remove Markers and Keep Both Changes (Soon)"];
-    println!("{},\n Which conflict resolution method you want: ", welcome_msg); 
-    
+    println!("{},\n {}: ", welcome_msg, msg); 
     options.iter().enumerate().map(|(i,x)| {
         println!("Option {}: {}",i,x.italic().blue().bold());
     }).collect::<Vec<_>>();
     println!("Select the option number: ");
     let mut line=String::new();
     io::stdin().read_line(&mut line).expect("error reading the line");
+    line
+}
+fn checking_value(value: i32) -> bool{
+    value <3 && value >1
+}
+fn main(){
+    let welcome_msg="Git Conflict Manager.... The tool for ultimate file control".italic().bold().bold().green();
 
+    let mut line=option_panel(&welcome_msg, "which conflict resolution you would like to choose");
     while line.trim_end().parse::<i32>().is_err(){
-        println!("Error You should only enter an integer");
-        options.iter().enumerate().map(|(i,x)| {
-                println!("Option {}: {}",i,x.italic().blue().bold());
-            }).collect::<Vec<_>>();
-        println!("Select the option number: ");
-        io::stdin().read_line(&mut line).expect("error reading the line");
+        line=option_panel(&welcome_msg, "Error You should only a valid option");
     }
-    let opt=line.trim_end().parse::<i32>().unwrap();
-    match opt {
-        s if s<1 => {
-            println!("Error You should only a valid option");
-            options.iter().enumerate().map(|(i,x)| {
-                    println!("Option {}: {}",i,x.italic().blue().bold());
-                }).collect::<Vec<_>>();
-            println!("Select the option number: ");
-            io::stdin().read_line(&mut line).expect("error reading the line");
-        },
-        s if s> 3 => {
-            println!("Error You should only a valid option");
-            options.iter().enumerate().map(|(i,x)| {
-                    println!("Option {}: {}",i,x.italic().blue().bold());
-                }).collect::<Vec<_>>();
-            println!("Select the option number: ");
-            io::stdin().read_line(&mut line).expect("error reading the line");
-        },
-        3 => {
-            println!("feature has not yet been developed");
-            options.iter().enumerate().map(|(i,x)| {
-                    println!("Option {}: {}",i,x.italic().blue().bold());
-                }).collect::<Vec<_>>();
-            println!("Select the option number: ");
-            io::stdin().read_line(&mut line).expect("error reading the line");
-        },
-        _ =>{
-            println!("Error You should only a valid option");
-            options.iter().enumerate().map(|(i,x)| {
-                    println!("Option {}: {}",i,x.italic().blue().bold());
-                }).collect::<Vec<_>>();
-            println!("Select the option number: ");
-            io::stdin().read_line(&mut line).expect("error reading the line");
-        },
+    let mut opt=line.trim_end().parse::<i32>().unwrap();
+    while !checking_value(opt){
+        line=option_panel(&welcome_msg, "You should only select a valid number");
+        opt=line.trim_end().parse::<i32>().unwrap();
     }
 }
 
