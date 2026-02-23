@@ -85,7 +85,10 @@ impl <'a>GitOps<'a> for Repo<'a>{
         let message="merge conflict";
         // get the heads commits
         let head=self.repo.head().unwrap();
-        let parents_commits=&[&head.peel_to_commit().unwrap()];
+        let ours_parents_commits=head.peel_to_commit().expect("error peeling to commit in ours version");
+        let theirs=self.repo.find_reference("MERGE_HEAD").expect("unable to find the second theirs reference");
+        let theirs_parents_commits=theirs.peel_to_commit().expect("error peeling to a commit in theirs version");
+        let parents_commits=&[&ours_parents_commits, &theirs_parents_commits];
 
         match self.repo.commit(Some("HEAD"), &signature, &signature, message, &tree, parents_commits){
             Ok(_val) => true,
