@@ -16,6 +16,7 @@ impl Branches{
    } 
 }
 //creating a struct that contains the essential details for a branch 
+#[allow(dead_code)]
 pub struct Repo<'a>{
     path: PathBuf,
     repo: Repository,
