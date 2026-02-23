@@ -1,6 +1,6 @@
 use git2::{Commit, Error, Index, MergeOptions, Repository, Status, StatusOptions, build::CheckoutBuilder};
 use crate::{GitOps, Initialize};
-use std::{env,path::{Path, PathBuf}};
+use std::{env, fs, path::{Path, PathBuf}};
 
 struct Branches{
     src_branch: String,
@@ -91,8 +91,19 @@ impl <'a>GitOps<'a> for Repo<'a>{
         let theirs_parents_commits=theirs.peel_to_commit().expect("error peeling to a commit in theirs version");
         let parents_commits=&[&ours_parents_commits, &theirs_parents_commits];
 
+        //rust git2 doesn't automatically clean up the conflict the conflict must be deleted
         match self.repo.commit(Some("HEAD"), &signature, &signature, message, &tree, parents_commits){
-            Ok(_val) => true,
+            Ok(_val) => {
+                //after making the commit git must know that the commit is clearing the conflict
+                //therefore, MERGE_HEAD file must be deleted to indicate the success of the merge
+                let merge_head_path=self.repo.path().join("MERGE_HEAD"); 
+                //repo.path outputs the content of the .git directory
+                //join "MERGE_HEAD" finds the file that starts with MERGE HEAD
+                if merge_head_path.exists(){
+                    fs::remove_file(merge_head_path).expect("unable to remove the file");
+                    //deleting the merge conflict if the commit didn't auto delete
+                }
+                true},
             _Error => false,
         }
     }
@@ -204,4 +215,5 @@ impl <'a>GitOps<'a> for Repo<'a>{
     //         }
     //     }
     // }
+    //
 }
