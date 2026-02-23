@@ -1,5 +1,7 @@
-use git_1nuc::{git_operations::Repo, GitOps};
+// use git_1nuc::{git_operations::Repo, GitOps};
+use colored::*;
 fn main(){
+    let welcome_msg="Git Conflict Manager.... The tool for ultimate file control".italic().bold().bold().green();
 }
 
 
