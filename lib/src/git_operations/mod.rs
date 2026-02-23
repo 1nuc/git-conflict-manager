@@ -68,6 +68,7 @@ impl <'a>Repo<'a>{
 impl <'a>GitOps<'a> for Repo<'a>{
 
     //TODO: staging changes
+    //this function has an embedding implementation
     fn staging(&mut self, files: Vec<String>){
         let _=files.iter().map(|x| {
             let path=Path::new(x);
@@ -76,6 +77,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
     }
     //TODO: Making a commit
 
+    //this function has an embedding implementation
     fn commit(&mut self)-> bool{
         let _=self.index.write();
         let tree=self.repo.find_tree(self.index.write_tree().unwrap()).unwrap();
@@ -92,6 +94,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
     }
 
     //TODO: return the file with conditions  
+    //this function has an embedding implementation
     fn return_files(&self,condition: Status)-> Option<Vec<String>>{
         let mut options=StatusOptions::new();
         options.include_untracked(false).recurse_untracked_dirs(false);
@@ -118,6 +121,8 @@ impl <'a>GitOps<'a> for Repo<'a>{
         }
     }
 
+    // In most cases this is the prefered choice for programmers
+    // The checkout is the first step towards changing the index
     fn checkout_local(&mut self){
         let head_branch= self.repo.head()
             .expect("unable to return the reference")
@@ -134,6 +139,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
     }
 
 
+    // A rarely used but useful option
     fn checkout_foreign(&mut self){
         let head_branch= self.repo.head()
             .expect("unable to return the reference")
@@ -149,6 +155,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
         }
     }
 
+    //this function has an embedding implementation
     fn checkout_files(&mut self) -> Vec<String>{
         //add files paths to be checked out with the new merge 
         let files=self.return_files(Status::CONFLICTED).expect("files cannot be found");
@@ -169,6 +176,9 @@ impl <'a>GitOps<'a> for Repo<'a>{
             false => panic!("error resolving the conflict"),
         }
     }
+    //TODO: resolve conflict by merging the changes from both branches : e.g. delete the conflict
+    //markers
+
     // fn testing_conflict_detection(){
     //     let args: Vec<String>=env::args().collect();
     //     // let branch_1=args[1].clone();
