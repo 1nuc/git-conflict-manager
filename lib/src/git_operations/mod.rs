@@ -27,7 +27,7 @@ pub struct Repo<'a>{
 #[allow(non_snake_case)]
 impl <'a> Initialize for Repo<'a>{
     //init
-    fn init(branch_1: &str, branch_2: &str) -> Self{
+    fn init(branch_1: String, branch_2: String) -> Self{
         let file_path=Self::return_path();
         let Repo=Self::return_repo(file_path).expect("unable to find a git repository");
         let repo_path=Repo.workdir().expect("unable to find the repository path").to_path_buf();

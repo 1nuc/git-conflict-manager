@@ -1,6 +1,6 @@
-use git_1nuc::{git_operations::Repo, GitOps};
+use git_1nuc::{git_operations::Repo, GitOps, Initialize};
 use colored::*;
-use std::{io};
+use std::{env, io};
 
 fn option_panel(welcome_msg: &str, msg: &str) -> String{
     let options=["Keep Local Head Changes", "Keep Foreign Branch Changes", "Remove Markers and Keep Both Changes (Soon)"];
@@ -17,7 +17,8 @@ fn checking_value(value: i32) -> bool{
     value <3 && value >1
 }
 fn main(){
-    let git_control= 
+    let args: Vec<String>=env::args().collect();
+    let git_control=Repo::init(args[1].clone(), args[2].clone()); 
     let welcome_msg="Git Conflict Manager.... The tool for ultimate file control".italic().bold().bold().green();
 
     let mut line=option_panel(&welcome_msg, "which conflict resolution you would like to choose");
