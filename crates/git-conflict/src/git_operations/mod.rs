@@ -50,6 +50,8 @@ impl <'a> Initialize for Repo<'a>{
     }
     //Returning the directory path
     fn return_repo(file_path: PathBuf) -> Option<Repository>{
+       // recursively traversing the directory to find the git index for which the content of the
+       // .git folder exists
        match Repository::discover(file_path){
            Ok(repo) => {
                if repo.workdir().is_some(){
