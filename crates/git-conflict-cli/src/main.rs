@@ -1,4 +1,4 @@
-use git_1nuc::{git_operations::Repo, GitOps, Initialize};
+use git_conflict::{git_operations::Repo, GitOps, Initialize};
 use colored::*;
 use log::*;
 use std::{env, io};
