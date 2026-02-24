@@ -2,6 +2,7 @@ use git2::{Commit, Error, Index, MergeOptions, Repository, Status, StatusOptions
 use crate::{GitOps, Initialize};
 use std::{env, fs, path::{Path, PathBuf}};
 
+//define the base struct to obtain the branches naming
 struct Branches{
     src_branch: String,
     dest_branch: String,
@@ -198,22 +199,4 @@ impl <'a>GitOps<'a> for Repo<'a>{
     //TODO: resolve conflict by merging the changes from both branches : e.g. delete the conflict
     //markers
 
-    // fn testing_conflict_detection(){
-    //     let args: Vec<String>=env::args().collect();
-    //     // let branch_1=args[1].clone();
-    //     // let branch_2=args[2].clone();
-    //     let dir=env::current_dir().unwrap();
-    //     if let Some(repo)=return_path(dir.as_path()){
-    //         let mut index=repo.index().unwrap();
-    //         if index.has_conflicts(){
-    //             let repository=Arc::new(repo);
-    //             let mut builder=CheckoutBuilder::new();
-    //             let checkout_builder=builder.use_ours(true);//specify the checkout build options to use
-    //                                                         //the ours (head) reference for the version
-    //                                                         //control switching
-    //             // resolve_conflicts(index, repo);
-    //         }
-    //     }
-    // }
-    //
 }
