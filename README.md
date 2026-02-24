@@ -14,7 +14,7 @@
 `cargo add git-conflict-cli`
 
 ### Clone from github
-'git clone git@github.com:1nuc/git-conflict-manager.git'
+`git clone git@github.com:1nuc/git-conflict-manager.git`
 
 ### Quick Notes before running the tools
 
