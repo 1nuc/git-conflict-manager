@@ -48,7 +48,7 @@ impl <'a> Initialize for Repo<'a>{
     fn return_path() -> PathBuf{
         env::current_dir().unwrap()
     }
-    //TODO: Returning the directory path
+    //Returning the directory path
     fn return_repo(file_path: PathBuf) -> Option<Repository>{
        match Repository::discover(file_path){
            Ok(repo) => {
@@ -69,7 +69,7 @@ impl <'a> Initialize for Repo<'a>{
 #[allow(non_snake_case)]
 impl <'a>GitOps<'a> for Repo<'a>{
 
-    //TODO: staging changes
+    //staging changes
     //this function has an embedding implementation
     fn staging(&mut self, files: Vec<String>){
         let _=files.iter().map(|x| {
@@ -77,7 +77,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
             self.index.add_path(path).expect("Error adding the file to the staging area");
             }).collect::<Vec<_>>();
     }
-    //TODO: Making a commit
+    //Making a commit
 
     //this function has an embedding implementation
     fn commit(&mut self)-> bool{
@@ -109,7 +109,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
         }
     }
 
-    //TODO: return the file with conditions  
+    //return the file with conditions  
     //this function has an embedding implementation
     fn return_files(&self,condition: Status)-> Option<Vec<String>>{
         let mut options=StatusOptions::new();
@@ -123,7 +123,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
         }
         Some(list_of_conflicted_files)
     }
-    //TODO: Merge function
+    //Merge function
 
     fn merge(&self,branch_1_commit: Commit, branch_2_commit: Commit) -> Result<Index, Error>{
         let merge_options=MergeOptions::new();
@@ -196,7 +196,14 @@ impl <'a>GitOps<'a> for Repo<'a>{
     fn does_conflict_exists(&self) -> bool{
         self.index.has_conflicts()
     }
-    //TODO: resolve conflict by merging the changes from both branches : e.g. delete the conflict
+    //resolve conflict by merging the changes from both branches : e.g. delete the conflict
     //markers
-
+    fn remove_conflict_markers(&self, file_name: PathBuf){
+        let file_path=fs::read_to_string(&file_name).unwrap();
+        let modify_content=file_path.lines().filter(
+            |x| !x.contains("<<<<<<<") & !x.contains("======") & !x.contains(">>>>>>")).collect::<Vec<_>>().join("\n");
+        let _=fs::write("tempfile", modify_content);
+        let _=fs::rename("tempfile", file_name);
+        let _=fs::remove_file("tempfile");
+    }
 }
