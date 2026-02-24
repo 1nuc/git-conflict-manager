@@ -37,6 +37,7 @@ fn main(){
 
     if !git_control.does_conflict_exists(){
         println!("{}","There is no conflict in your index".italic().bold().red());
+        return;
     }
     let welcome_msg="Git Conflict Manager.... The tool for ultimate file control".italic().bold().bold().green();
 
