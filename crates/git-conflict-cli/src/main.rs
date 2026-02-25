@@ -22,7 +22,7 @@ fn show_example(){
     warn!("{}","rewrite the command with specifying the name of the branches".italic().bold().yellow());
 }
 fn checking_value(value: i32) -> bool{
-    value <3 && value >0
+    value <4 && value >0
 }
 
 fn main(){
