@@ -58,7 +58,7 @@ fn main(){
             git_control.checkout_foreign().resolve_conflict_by_discarding();
         },
         3 =>{
-            println!("feature has not yet been developed");
+            git_control.resolve_conflict_by_combining();
         },
         _ =>warn!("undefined error"),
     }
