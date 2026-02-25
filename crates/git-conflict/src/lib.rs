@@ -13,7 +13,9 @@ pub trait GitOps <'a>{
     fn checkout_files(&mut self) -> Vec<String>;
     fn resolve_conflict_by_discarding(&mut self);
     fn does_conflict_exists(&self) -> bool;
-    fn remove_conflict_markers(&self, file_path: PathBuf);
+    fn remove_conflict_markers(&self, file_path: String);
+    fn merge_files(&mut self) -> Vec<String>;
+    fn resolve_conflict_by_combining(&mut self);
 }
 pub trait Initialize {
     fn init(branch_1: String, branch_2: String) -> Self;

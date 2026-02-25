@@ -78,24 +78,27 @@ impl <'a>GitOps<'a> for Repo<'a>{
             let path=Path::new(x);
             self.index.add_path(path).expect("Error adding the file to the staging area");
             }).collect::<Vec<_>>();
+        self.index.write().expect("unable to save the staged changes to memory");
     }
-    //Making a commit
 
+    //Making a commit
     //this function has an embedding implementation
     fn commit(&mut self)-> bool{
         let _=self.index.write();
         let tree=self.repo.find_tree(self.index.write_tree().unwrap()).unwrap();
         let signature=self.repo.signature().unwrap().to_owned();
-        let message="merge conflict";
+        let message=format!("Resolve Conflict: Merge {} branch into {} branch", self.branches.src_branch, self.branches.dest_branch);
         // get the heads commits
         let head=self.repo.head().unwrap();
+        // retreive the commits of "ours" branch
         let ours_parents_commits=head.peel_to_commit().expect("error peeling to commit in ours version");
         let theirs=self.repo.find_reference("MERGE_HEAD").expect("unable to find the second theirs reference");
+        // retreive the commits of "theirs" branch
         let theirs_parents_commits=theirs.peel_to_commit().expect("error peeling to a commit in theirs version");
         let parents_commits=&[&ours_parents_commits, &theirs_parents_commits];
 
         //rust git2 doesn't automatically clean up the conflict the conflict must be deleted
-        match self.repo.commit(Some("HEAD"), &signature, &signature, message, &tree, parents_commits){
+        match self.repo.commit(Some("HEAD"), &signature, &signature, &message, &tree, parents_commits){
             Ok(_val) => {
                 //after making the commit git must know that the commit is clearing the conflict
                 //therefore, MERGE_HEAD file must be deleted to indicate the success of the merge
@@ -195,17 +198,39 @@ impl <'a>GitOps<'a> for Repo<'a>{
             false => panic!("error resolving the conflict"),
         }
     }
+
     fn does_conflict_exists(&self) -> bool{
         self.index.has_conflicts()
     }
     //resolve conflict by merging the changes from both branches : e.g. delete the conflict
     //markers
-    fn remove_conflict_markers(&self, file_name: PathBuf){
+    fn remove_conflict_markers(&self, file_name: String){
         let file_path=fs::read_to_string(&file_name).unwrap();
         let modify_content=file_path.lines().filter(
             |x| !x.contains("<<<<<<<") & !x.contains("======") & !x.contains(">>>>>>")).collect::<Vec<_>>().join("\n");
         let _=fs::write("tempfile", modify_content);
         let _=fs::rename("tempfile", file_name);
         let _=fs::remove_file("tempfile");
+    }
+
+    // This function merge the contents of the conflicted branches
+    fn merge_files(&mut self) -> Vec<String>{
+        // return the conflicted files
+        let files=self.return_files(Status::CONFLICTED).expect("files cannot be found");
+        // merge the contents of each file from the conflicted branches
+        let _=files.iter().map(|x| {
+            Self::remove_conflict_markers(self, x.to_string());
+        }).collect::<Vec<_>>();
+        files
+    }
+
+    //resolves the conflict between two branches by combining the changes of both branches
+    fn resolve_conflict_by_combining(&mut self){
+        let files=self.merge_files();
+        self.staging(files); //stage the changes
+        match self.commit(){//commit the changes
+            true => println!("conflict is resolved"),
+            false => panic!("error resolving the conflict"),
+        }
     }
 }
