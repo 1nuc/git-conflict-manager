@@ -81,6 +81,11 @@ impl <'a>GitOps<'a> for Repo<'a>{
         self.index.write().expect("unable to save the staged changes to memory");
     }
 
+    /// If you want to have the cimmits of both branches run this function
+    fn display_commits(&self) {
+        let src_branch=self.repo.head().expect("unable to get the head");
+        println!("src_branch: {:?}", src_branch.peel_to_commit().expect("error"));
+    }
     //Making a commit
     //this function has an embedding implementation
     fn commit(&mut self)-> bool{
@@ -96,13 +101,14 @@ impl <'a>GitOps<'a> for Repo<'a>{
         // retreive the commits of "theirs" branch
         let theirs_parents_commits=theirs.peel_to_commit().expect("error peeling to a commit in theirs version");
         let parents_commits=&[&ours_parents_commits, &theirs_parents_commits];
-
         //rust git2 doesn't automatically clean up the conflict the conflict must be deleted
         match self.repo.commit(Some("HEAD"), &signature, &signature, &message, &tree, parents_commits){
             Ok(_val) => {
                 //after making the commit git must know that the commit is clearing the conflict
                 //therefore, MERGE_HEAD file must be deleted to indicate the success of the merge
-                let merge_head_path=self.repo.path().join("MERGE_HEAD"); 
+                let merge_head_path=self.repo.path().join("MERGE_HEAD"); // I believe this is the
+                                                                         // line where the error
+                                                                         // stems
                 //repo.path outputs the content of the .git directory
                 //join "MERGE_HEAD" finds the file that starts with MERGE HEAD
                 if merge_head_path.exists(){

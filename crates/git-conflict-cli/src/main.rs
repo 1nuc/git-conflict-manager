@@ -1,10 +1,10 @@
 use git_conflict::{git_operations::Repo, GitOps, Initialize};
 use colored::*;
 use log::*;
-use std::{env, io};
+use std::{env, io, process::exit};
 
 fn option_panel(welcome_msg: &str, msg: &str) -> String{
-    let options=["Keep Local Head Changes", "Keep Foreign Branch Changes", "Remove Markers and Keep Both Changes (Soon)"];
+    let options=["Keep Local Head Changes", "Keep Foreign Branch Changes", "Remove Markers and Keep Both Changes (Soon)", "investigate branches commits"];
     println!("{},\n{}: ", welcome_msg, msg); 
     let _=options.iter().enumerate().map(|(i,x)| {
         println!("Option {}: {}",1+i,x.italic().blue().bold());
@@ -25,6 +25,7 @@ fn checking_value(value: i32) -> bool{
     value <4 && value >0
 }
 
+#[allow(unused_must_use)]
 fn main(){
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
     let args: Vec<String>=env::args().collect();
@@ -37,7 +38,13 @@ fn main(){
 
     if !git_control.does_conflict_exists(){
         println!("{}","There is no conflict in your index".italic().bold().red());
-        return;
+        println!("Move Anyway");
+        let mut next_move=String::new();
+        io::stdin().read_line(&mut next_move).expect("an error occur while fetching the user input");
+        next_move.trim_end();
+        if next_move=="No"{
+            exit(0);
+        }
     }
     let welcome_msg="Git Conflict Manager.... The tool for ultimate file control".italic().bold().bold().green();
 
@@ -60,6 +67,10 @@ fn main(){
         3 =>{
             git_control.resolve_conflict_by_combining();
         },
+        4 =>{
+            println!("should display some commits");
+            git_control.display_commits();
+        }
         _ =>warn!("undefined error"),
     }
 
