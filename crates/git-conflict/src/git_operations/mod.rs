@@ -81,6 +81,8 @@ impl <'a>GitOps<'a> for Repo<'a>{
         self.index.write().expect("unable to save the staged changes to memory");
     }
 
+    /// find the ancestor commits and trees
+    fn find_ancesistor(&self)-> Commit{}
     /// If you want to have the cimmits of both branches run this function
     fn display_commits(&mut self) {
         let tree=self.repo.find_tree(self.index.write_tree().unwrap()).unwrap();
@@ -95,8 +97,16 @@ impl <'a>GitOps<'a> for Repo<'a>{
         }).unwrap();
 
         println!("------------------");
-        println!("current commits pointed by the head branch");
-        println!("src_branch: {:?}", src_branch.peel_to_commit().expect("error"));
+
+        other_branch_tree.walk(git2::TreeWalkMode::PreOrder, |_, entry|{
+            println!("{:?}", entry.name());
+            TreeWalkResult::Ok
+        }).unwrap();
+
+        println!("making a trial merge of commits of both branches trees");
+        let builder=self.builder.use_ours(true);
+        let merged_trees=
+        let new_tree=self.repo.merge_trees(ancestor_tree, our_tree, their_tree, opts)
     }
     //Making a commit
     //this function has an embedding implementation
