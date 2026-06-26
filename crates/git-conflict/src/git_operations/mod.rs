@@ -1,4 +1,4 @@
-use git2::{Commit, Error, Index, MergeOptions, Repository, Status, StatusOptions, TreeWalkMode, TreeWalkResult, build::CheckoutBuilder};
+use git2::{Commit, Error, Index, MergeOptions, Oid, Repository, Status, StatusOptions, TreeWalkMode, TreeWalkResult, build::CheckoutBuilder};
 use crate::{GitOps, Initialize};
 use std::{env, fs, path::{Path, PathBuf}};
 
@@ -82,7 +82,12 @@ impl <'a>GitOps<'a> for Repo<'a>{
     }
 
     /// find the ancestor commits and trees
-    fn find_ancesistor(&self)-> Commit{}
+    fn find_ancesistor(&self)-> Result<Oid, Error>{
+        let head_commits=self.repo.head().unwrap().peel_to_commit().unwrap();
+        let other_branch_commits=self.repo.find_reference(
+            &self.branches.dest_branch).expect("unable to find the other branch's reference").peel_to_commit().unwrap();
+        self.repo.merge_base(head_commits.id(), other_branch_commits.id())
+    }
     /// If you want to have the cimmits of both branches run this function
     fn display_commits(&mut self) {
         let tree=self.repo.find_tree(self.index.write_tree().unwrap()).unwrap();

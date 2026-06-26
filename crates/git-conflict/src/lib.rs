@@ -1,10 +1,10 @@
 use std::path::PathBuf;
 
-use git2::{Commit, Error, Index, Repository, Status};
+use git2::{Commit, Error, Index, Repository, Status, Oid};
 pub mod git_operations;
 
 pub trait GitOps <'a>{
-    fn find_ancesistor(&self)-> Commit{}
+    fn find_ancesistor(&self)-> Result<Oid, Error>;
     fn display_commits(&mut self);
     fn staging(&mut self, files: Vec<String>);
     fn commit(&mut self)-> bool;
