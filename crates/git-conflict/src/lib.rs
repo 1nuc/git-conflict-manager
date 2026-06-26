@@ -4,7 +4,7 @@ use git2::{Commit, Error, Index, Repository, Status};
 pub mod git_operations;
 
 pub trait GitOps <'a>{
-    fn display_commits(&self);
+    fn display_commits(&mut self);
     fn staging(&mut self, files: Vec<String>);
     fn commit(&mut self)-> bool;
     fn return_files(&self,condition: Status)-> Option<Vec<String>>;

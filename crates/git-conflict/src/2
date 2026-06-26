@@ -85,16 +85,11 @@ impl <'a>GitOps<'a> for Repo<'a>{
     fn display_commits(&mut self) {
         let tree=self.repo.find_tree(self.index.write_tree().unwrap()).unwrap();
         let src_branch=self.repo.head().expect("unable to get the head");
-
-        let other_branch_ref=self.repo.find_reference(&self.branches.dest_branch).unwrap();
-        let other_branch_tree=other_branch_ref.peel_to_tree().unwrap();
         //This only shows an ID and a Summary
         tree.walk(git2::TreeWalkMode::PreOrder, |_, entry|{
             println!("{:?}", entry.name());
             TreeWalkResult::Ok
         }).unwrap();
-
-        println!("------------------");
         println!("current commits pointed by the head branch");
         println!("src_branch: {:?}", src_branch.peel_to_commit().expect("error"));
     }
