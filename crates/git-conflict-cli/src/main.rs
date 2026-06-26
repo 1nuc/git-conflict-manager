@@ -4,7 +4,8 @@ use log::*;
 use std::{env, io, process::exit};
 
 fn option_panel(welcome_msg: &str, msg: &str) -> String{
-    let options=["Keep Local Head Changes", "Keep Foreign Branch Changes", "Remove Markers and Keep Both Changes (Soon)", "investigate branches commits"];
+    let options=["Keep Local Head Changes", "Keep Foreign Branch Changes", "Remove Markers and Keep Both Changes (Soon)", "investigate branches commits", 
+    "Exit"];
     println!("{},\n{}: ", welcome_msg, msg); 
     let _=options.iter().enumerate().map(|(i,x)| {
         println!("Option {}: {}",1+i,x.italic().blue().bold());
@@ -22,7 +23,7 @@ fn show_example(){
     warn!("{}","rewrite the command with specifying the name of the branches".italic().bold().yellow());
 }
 fn checking_value(value: i32) -> bool{
-    value <4 && value >0
+    value <6 && value >0
 }
 
 #[allow(unused_must_use)]
@@ -70,6 +71,9 @@ fn main(){
         4 =>{
             println!("should display some commits");
             git_control.display_commits();
+        }
+        5 =>{
+            exit(0);
         }
         _ =>warn!("undefined error"),
     }

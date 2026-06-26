@@ -84,6 +84,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
     /// If you want to have the cimmits of both branches run this function
     fn display_commits(&self) {
         let src_branch=self.repo.head().expect("unable to get the head");
+        //This only shows an ID and a Summary
         println!("src_branch: {:?}", src_branch.peel_to_commit().expect("error"));
     }
     //Making a commit
@@ -184,12 +185,13 @@ impl <'a>GitOps<'a> for Repo<'a>{
         self
     }
     //this function has an embedding implementation
+    #[allow(unused_must_use)]
     fn checkout_files(&mut self) -> Vec<String>{
         //add files paths to be checked out with the new merge 
         let files=self.return_files(Status::CONFLICTED).expect("files cannot be found");
         // specify the files for which the checkout is to be held for
-        let _=files.iter().map(|x| {
-            let _=self.builder.path(x).force();
+        files.iter().map(|x| {
+           self.builder.path(x).force();
         }).collect::<Vec<_>>();
         files
     }
