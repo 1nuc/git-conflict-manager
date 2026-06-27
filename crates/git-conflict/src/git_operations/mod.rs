@@ -82,13 +82,15 @@ impl <'a>GitOps<'a> for Repo<'a>{
     }
 
     /// find the ancestor commits and trees
-    fn find_ancesistor(&self)-> Result<Oid, Error>{
+    fn find_ancesistor(&'a self)-> Result<Commit<'a>, Error>{
         let head_commits=self.repo.head().unwrap().peel_to_commit().unwrap();
         let other_branch_commits=self.repo.find_reference(
             &self.branches.dest_branch).expect("unable to find the other branch's reference").peel_to_commit().unwrap();
-        self.repo.merge_base(head_commits.id(), other_branch_commits.id())
+        let oid = self.repo.merge_base(head_commits.id(), other_branch_commits.id()).unwrap();
+        self.repo.find_commit(oid)
     }
     /// If you want to have the cimmits of both branches run this function
+    #[allow(unused_must_use)]
     fn display_commits(&mut self) {
         let tree=self.repo.find_tree(self.index.write_tree().unwrap()).unwrap();
         let src_branch=self.repo.head().expect("unable to get the head");
@@ -108,10 +110,24 @@ impl <'a>GitOps<'a> for Repo<'a>{
             TreeWalkResult::Ok
         }).unwrap();
 
+        println!("exploring the common shared");
+        let ancestor=self.find_ancesistor().unwrap();
+        println!("Ancestor commit is: {:?}", ancestor);
+
         println!("making a trial merge of commits of both branches trees");
-        let builder=self.builder.use_ours(true);
-        let merged_trees=
-        let new_tree=self.repo.merge_trees(ancestor_tree, our_tree, their_tree, opts)
+        let ancestor_tree=ancestor.tree().unwrap();
+        ancestor_tree.walk(TreeWalkMode::PreOrder, |_, entry|{
+            println!("{:?}", entry.name());
+            TreeWalkResult::Ok
+        });
+        // let builder=self.builder.use_ours(true);
+        let merged_options=MergeOptions::default();
+        let mut merged_index=self.repo.merge_trees(&ancestor_tree, &tree, &other_branch_tree, Some(&merged_options)).unwrap();
+        let merged_tree=self.repo.find_tree(merged_index.write_tree().unwrap()).unwrap();
+        merged_tree.walk(TreeWalkMode::PreOrder, |_, entry|{
+            println!("merged_trees: {:?}", entry.name());
+            TreeWalkResult::Ok
+        });
     }
     //Making a commit
     //this function has an embedding implementation
