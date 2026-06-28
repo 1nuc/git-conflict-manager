@@ -1,4 +1,4 @@
-use git_conflict::{git_opt::Repo, GitOps, Initialize};
+use git_conflict::{git_src::Repo, GitOps, Initialize};
 use colored::*;
 use log::*;
 use std::{env, io, process::exit};

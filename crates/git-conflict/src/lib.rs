@@ -6,7 +6,7 @@ pub mod git_opt;
 
 pub trait GitOps <'a>{
     fn find_ancesistor(&'a self)-> Result<Commit<'a>, Error>;
-    fn display_commits(&mut self);
+    fn merge_trees(&mut self);
     fn staging(&mut self, files: Vec<String>);
     fn commit(&mut self)-> bool;
     fn return_files(&self,condition: Status)-> Option<Vec<String>>;

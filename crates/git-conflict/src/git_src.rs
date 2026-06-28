@@ -92,7 +92,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
     }
     /// If you want to have the cimmits of both branches run this function
     #[allow(unused_must_use)]
-    fn display_commits(&mut self) {
+    fn merge_trees(&mut self) {
         let src_branch=self.repo.head().expect("unable to get the head");
 
         let src_branch_commit=src_branch.peel_to_commit().expect("unable to fetch the commit");
@@ -100,33 +100,17 @@ impl <'a>GitOps<'a> for Repo<'a>{
 
         let other_branch=self.repo.find_branch(&self.branches.dest_branch,
             git2::BranchType::Local).expect("unable to fetch other branch").into_reference();
+
         let other_branch_tree=other_branch.peel_to_commit()
             .expect("unable to fetch the commit in the dest branch").tree().expect("unable to fetch the tree in the dest branch");
-        //This only shows an ID and a Summary
-        src_branch_tree.walk(git2::TreeWalkMode::PreOrder, |_, entry|{
-            println!("{:?}", entry.name());
-            TreeWalkResult::Ok
-        }).unwrap();
-
-        println!("------------------");
-
-        other_branch_tree.walk(git2::TreeWalkMode::PreOrder, |_, entry|{
-            println!("{:?}", entry.name());
-            TreeWalkResult::Ok
-        }).unwrap();
 
         let ancestor=self.find_ancesistor().expect("There is no common parent between those commits");
-        println!("Ancestor commit is: {:?}", ancestor);
 
-        println!("Ancestor Tree");
         let ancestor_tree=ancestor.tree().unwrap();
-        ancestor_tree.walk(TreeWalkMode::PreOrder, |_, entry|{
-            println!("{:?}", entry.name());
-            TreeWalkResult::Ok
-        });
-        // let builder=self.builder.use_ours(true);
+
         let mut merged_options=MergeOptions::default();
-        let mut checkout_builder=CheckoutBuilder::default();
+        // let mut checkout_builder=CheckoutBuilder::default();
+
         // The below trees are conflicted 
         let merged_index=self.repo.merge_trees(
             &ancestor_tree,
@@ -137,22 +121,36 @@ impl <'a>GitOps<'a> for Repo<'a>{
         // the above index is created but its not connected to a repostiroy
         let mut index=Index::new().unwrap();
         conflicts.map(|conf|{
-            let conf=conf.unwrap();
-            let ancestor=conf.ancestor.unwrap();
-            let base=conf.our.unwrap();
+            let entry=conf.unwrap();
+            let ancestor=entry.ancestor.unwrap();
+            let base=entry.our.unwrap();
             index.add(&self.make_entry(ancestor, base, true));
         });
-        self.repo.set_index(&mut index).expect("Unable to write the index to the repository");
 
-        let merged_tree=self.repo.find_object(index.write_tree().expect("Error in writing the tree")
-            , Some(ObjectType::Tree)).expect("error in finding the tree object");
-
-        self.repo.checkout_tree(&merged_tree, Some(&mut checkout_builder.force()));
-        let tree=merged_tree.peel_to_tree().unwrap();
-        tree.walk(TreeWalkMode::PreOrder, |_, entry|{
-            println!("merged_trees: {:?}", entry.name());
-            TreeWalkResult::Ok
-        });
+        self.repo.set_index(&mut index).expect("Unable to write the index to the repository"); //staging
+                                                                                               //area
+        let new_tree=self.repo.find_tree(index.write_tree().unwrap()).unwrap();
+        let signature=self.repo.signature().unwrap().to_owned();
+        let message=format!("Resolve Conflict through tree resolution:  {} branch into {} branch", self.branches.src_branch, self.branches.dest_branch);
+        // get the heads commits
+        let parents_commits=&[&src_branch_commit, &ancestor];
+        //rust git2 doesn't automatically clean up the conflict the conflict must be deleted
+        match self.repo.commit(Some("HEAD"), &signature, &signature, &message, &new_tree, parents_commits){
+            Ok(_val) => {
+                //after making the commit git must know that the commit is clearing the conflict
+                //therefore, MERGE_HEAD file must be deleted to indicate the success of the merge
+                let merge_head_path=self.repo.path().join("MERGE_HEAD"); // I believe this is the
+                                                                         // line where the error
+                                                                         // stems
+                //repo.path outputs the content of the .git directory
+                //join "MERGE_HEAD" finds the file that starts with MERGE HEAD
+                if merge_head_path.exists(){
+                    fs::remove_file(merge_head_path).expect("unable to remove the file");
+                    //deleting the merge conflict if the commit didn't auto delete
+                }
+            },
+            _=> println!("Commit is not successful"),
+        }
     }
     //Making a commit
     //this function has an embedding implementation
