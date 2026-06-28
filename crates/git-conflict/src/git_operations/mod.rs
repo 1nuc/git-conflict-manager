@@ -84,8 +84,9 @@ impl <'a>GitOps<'a> for Repo<'a>{
     /// find the ancestor commits and trees
     fn find_ancesistor(&'a self)-> Result<Commit<'a>, Error>{
         let head_commits=self.repo.head().unwrap().peel_to_commit().unwrap();
-        let other_branch_commits=self.repo.find_reference(
-            &self.branches.dest_branch).expect("unable to find the other branch's reference").peel_to_commit().unwrap();
+        let other_branch_commits=self.repo.
+            find_branch(&self.branches.dest_branch,
+            git2::BranchType::Local).unwrap().into_reference().peel_to_commit().expect("unable to fetch the commit");
         let oid = self.repo.merge_base(head_commits.id(), other_branch_commits.id()).unwrap();
         self.repo.find_commit(oid)
     }
@@ -115,26 +116,23 @@ impl <'a>GitOps<'a> for Repo<'a>{
         }).unwrap();
 
         println!("exploring the common shared");
-        if !self.does_conflict_exists(){
-            let tree=self.repo.find_tree(self.index.write_tree().unwrap()).unwrap();
-            let ancestor=self.find_ancesistor().expect("There is no common parent between those commits");
-            println!("Ancestor commit is: {:?}", ancestor);
+        let ancestor=self.find_ancesistor().expect("There is no common parent between those commits");
+        println!("Ancestor commit is: {:?}", ancestor);
 
-            println!("making a trial merge of commits of both branches trees");
-            let ancestor_tree=ancestor.tree().unwrap();
-            ancestor_tree.walk(TreeWalkMode::PreOrder, |_, entry|{
-                println!("{:?}", entry.name());
-                TreeWalkResult::Ok
-            });
-            // let builder=self.builder.use_ours(true);
-            let merged_options=MergeOptions::default();
-            let mut merged_index=self.repo.merge_trees(&ancestor_tree, &tree, &other_branch_tree, Some(&merged_options)).unwrap();
-            let merged_tree=self.repo.find_tree(merged_index.write_tree().unwrap()).unwrap();
-            merged_tree.walk(TreeWalkMode::PreOrder, |_, entry|{
-                println!("merged_trees: {:?}", entry.name());
-                TreeWalkResult::Ok
-            });
-        }
+        println!("making a trial merge of commits of both branches trees");
+        let ancestor_tree=ancestor.tree().unwrap();
+        ancestor_tree.walk(TreeWalkMode::PreOrder, |_, entry|{
+            println!("{:?}", entry.name());
+            TreeWalkResult::Ok
+        });
+        // let builder=self.builder.use_ours(true);
+        let merged_options=MergeOptions::default();
+        let mut merged_index=self.repo.merge_trees(&ancestor_tree, &src_branch_tree, &other_branch_tree, Some(&merged_options)).unwrap();
+        let merged_tree=self.repo.find_tree(merged_index.write_tree().unwrap()).unwrap();
+        merged_tree.walk(TreeWalkMode::PreOrder, |_, entry|{
+            println!("merged_trees: {:?}", entry.name());
+            TreeWalkResult::Ok
+        });
     }
     //Making a commit
     //this function has an embedding implementation
