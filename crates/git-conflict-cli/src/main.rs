@@ -70,7 +70,7 @@ fn main(){
         },
         4 =>{
             println!("should display some commits");
-            git_control.display_commits();
+            git_control.merge_trees();
         }
         5 =>{
             exit(0);
