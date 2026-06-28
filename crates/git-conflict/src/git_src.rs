@@ -1,4 +1,4 @@
-use git2::{Commit, Error, Index, MergeOptions, ObjectType, Oid, Repository, Status, StatusOptions, TreeWalkMode, TreeWalkResult, build::CheckoutBuilder};
+use git2::{Commit, Error, Index, MergeOptions, ObjectType, Repository, Status, StatusOptions, TreeWalkMode, TreeWalkResult, build::CheckoutBuilder};
 use crate::{GitOps, Initialize};
 use std::{env, fs, path::{Path, PathBuf}};
 
@@ -115,21 +115,37 @@ impl <'a>GitOps<'a> for Repo<'a>{
             TreeWalkResult::Ok
         }).unwrap();
 
-        println!("exploring the common shared");
         let ancestor=self.find_ancesistor().expect("There is no common parent between those commits");
         println!("Ancestor commit is: {:?}", ancestor);
 
-        println!("making a trial merge of commits of both branches trees");
+        println!("Ancestor Tree");
         let ancestor_tree=ancestor.tree().unwrap();
         ancestor_tree.walk(TreeWalkMode::PreOrder, |_, entry|{
             println!("{:?}", entry.name());
             TreeWalkResult::Ok
         });
         // let builder=self.builder.use_ours(true);
-        let merged_options=MergeOptions::default();
+        let mut merged_options=MergeOptions::default();
         let mut checkout_builder=CheckoutBuilder::default();
-        let mut merged_index=self.repo.merge_trees(&ancestor_tree, &src_branch_tree, &other_branch_tree, Some(&merged_options)).unwrap();
-        let merged_tree=self.repo.find_object(merged_index.write_tree().unwrap(), Some(ObjectType::Tree)).unwrap();
+        // The below trees are conflicted 
+        let mut merged_index=self.repo.merge_trees(
+            &ancestor_tree,
+            &src_branch_tree,
+            &other_branch_tree,
+            Some(merged_options.patience(true))).unwrap();
+        let conflicts=merged_index.conflicts().unwrap();
+        // the above index is created but its not connected to a repostiroy
+        conflicts.map(|conf|{
+            let conf=conf.unwrap();
+            let ancestor=conf.ancestor.unwrap();
+            ancestor.
+
+        });
+        self.repo.set_index(&mut merged_index).expect("Unable to write the index to the repository");
+
+        let merged_tree=self.repo.find_object(merged_index.write_tree().expect("Error in writing the tree")
+            , Some(ObjectType::Tree)).expect("error in finding the tree object");
+
         self.repo.checkout_tree(&merged_tree, Some(&mut checkout_builder.force()));
         let tree=merged_tree.peel_to_tree().unwrap();
         tree.walk(TreeWalkMode::PreOrder, |_, entry|{

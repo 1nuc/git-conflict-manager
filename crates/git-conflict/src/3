@@ -1,0 +1,16 @@
+use git2::{Index, IndexEntry};
+
+use crate::{git_src::Repo, Measuments};
+
+impl <'a> Measuments for Repo<'a>{
+    fn make_entry(&self, ancestor:IndexEntry, base:IndexEntry, parent_interference: bool) -> IndexEntry{
+        let index=ancestor if parent_interference else base;
+        IndexEntry{
+            ctime:,
+            mtime:
+            path:,
+
+        }
+    }
+}
+
