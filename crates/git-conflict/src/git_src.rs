@@ -1,5 +1,5 @@
 use git2::{Commit, Error, Index, MergeOptions, ObjectType, Repository, Status, StatusOptions, TreeWalkMode, TreeWalkResult, build::CheckoutBuilder};
-use crate::{GitOps, Initialize};
+use crate::{GitOps, Initialize, Measuments};
 use std::{env, fs, path::{Path, PathBuf}};
 
 //define the base struct to obtain the branches naming
@@ -128,22 +128,23 @@ impl <'a>GitOps<'a> for Repo<'a>{
         let mut merged_options=MergeOptions::default();
         let mut checkout_builder=CheckoutBuilder::default();
         // The below trees are conflicted 
-        let mut merged_index=self.repo.merge_trees(
+        let merged_index=self.repo.merge_trees(
             &ancestor_tree,
             &src_branch_tree,
             &other_branch_tree,
             Some(merged_options.patience(true))).unwrap();
         let conflicts=merged_index.conflicts().unwrap();
         // the above index is created but its not connected to a repostiroy
+        let mut index=Index::new().unwrap();
         conflicts.map(|conf|{
             let conf=conf.unwrap();
             let ancestor=conf.ancestor.unwrap();
-            ancestor.
-
+            let base=conf.our.unwrap();
+            index.add(&self.make_entry(ancestor, base, true));
         });
-        self.repo.set_index(&mut merged_index).expect("Unable to write the index to the repository");
+        self.repo.set_index(&mut index).expect("Unable to write the index to the repository");
 
-        let merged_tree=self.repo.find_object(merged_index.write_tree().expect("Error in writing the tree")
+        let merged_tree=self.repo.find_object(index.write_tree().expect("Error in writing the tree")
             , Some(ObjectType::Tree)).expect("error in finding the tree object");
 
         self.repo.checkout_tree(&merged_tree, Some(&mut checkout_builder.force()));
