@@ -4,7 +4,7 @@ use log::*;
 use std::{env, io, process::exit};
 
 fn option_panel(welcome_msg: &str, msg: &str) -> String{
-    let options=["Keep Local Head Changes", "Keep Foreign Branch Changes", "Remove Markers and Keep Both Changes (Soon)", "investigate branches commits", 
+    let options=["Keep Local Head Changes", "Keep Foreign Branch Changes", "Remove Markers and Keep Both Changes (Soon)", "Merge Trees", 
     "Exit"];
     println!("{},\n{}: ", welcome_msg, msg); 
     let _=options.iter().enumerate().map(|(i,x)| {
