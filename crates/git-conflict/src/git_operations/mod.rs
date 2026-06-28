@@ -97,7 +97,8 @@ impl <'a>GitOps<'a> for Repo<'a>{
         let src_branch_commit=src_branch.peel_to_commit().expect("unable to fetch the commit");
         let src_branch_tree=src_branch_commit.tree().expect("unable to fetch the tree");
 
-        let other_branch=self.repo.find_reference(&self.branches.dest_branch).expect("unable to fetch other branch");
+        let other_branch=self.repo.find_branch(&self.branches.dest_branch,
+            git2::BranchType::Local).expect("unable to fetch other branch").into_reference();
         let other_branch_tree=other_branch.peel_to_commit()
             .expect("unable to fetch the commit in the dest branch").tree().expect("unable to fetch the tree in the dest branch");
         //This only shows an ID and a Summary
