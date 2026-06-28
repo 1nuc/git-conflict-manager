@@ -1,4 +1,4 @@
-use git2::{Commit, Error, Index, MergeOptions, Oid, Repository, Status, StatusOptions, TreeWalkMode, TreeWalkResult, build::CheckoutBuilder};
+use git2::{Commit, Error, Index, MergeOptions, ObjectType, Oid, Repository, Status, StatusOptions, TreeWalkMode, TreeWalkResult, build::CheckoutBuilder};
 use crate::{GitOps, Initialize};
 use std::{env, fs, path::{Path, PathBuf}};
 
@@ -127,9 +127,12 @@ impl <'a>GitOps<'a> for Repo<'a>{
         });
         // let builder=self.builder.use_ours(true);
         let merged_options=MergeOptions::default();
+        let mut checkout_builder=CheckoutBuilder::default();
         let mut merged_index=self.repo.merge_trees(&ancestor_tree, &src_branch_tree, &other_branch_tree, Some(&merged_options)).unwrap();
-        let merged_tree=self.repo.find_tree(merged_index.write_tree().unwrap()).unwrap();
-        merged_tree.walk(TreeWalkMode::PreOrder, |_, entry|{
+        let merged_tree=self.repo.find_object(merged_index.write_tree().unwrap(), Some(ObjectType::Tree)).unwrap();
+        self.repo.checkout_tree(&merged_tree, Some(&mut checkout_builder.force()));
+        let tree=merged_tree.peel_to_tree().unwrap();
+        tree.walk(TreeWalkMode::PreOrder, |_, entry|{
             println!("merged_trees: {:?}", entry.name());
             TreeWalkResult::Ok
         });
