@@ -1,6 +1,6 @@
-use git2::{Commit, Error, Index, MergeOptions, Repository, Signature, Status, StatusOptions, build::CheckoutBuilder};
+use git2::{Commit, Config, Error, Index, MergeOptions, Repository, Signature, Status, StatusOptions, Time, build::CheckoutBuilder};
 use crate::{GitOps, Initialize, Measuments};
-use std::{env, fs, path::{Path, PathBuf}};
+use std::{env, fs, path::{Path, PathBuf}, time::{SystemTime, UNIX_EPOCH}};
 
 //define the base struct to obtain the branches naming
 pub struct Branches{
@@ -157,10 +157,17 @@ impl <'a>GitOps<'a> for Repo<'a>{
     //Making a commit
     //this function has an embedding implementation
     #[allow(unused_must_use)]
-    fn commit(&mut self, index: Index, parent_commits: &[&Commit], msg: String)-> bool{
+    fn commit(&mut self, mut index: Index, parent_commits: &[&Commit], msg: String)-> bool{
         index.write();
         let tree=self.repo.find_tree(self.index.write_tree().unwrap()).unwrap();
         let signature=self.repo.signature().unwrap().to_owned();
+        let config=Config::new().unwrap();
+        let now=SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
+
+        let user_name=config.get_str("user.name").unwrap();
+        let email=config.get_str("user.email").unwrap();
+        let time=Time::new(now, 0);
+        let author=Signature::new(user_name, email, &time).expect("unable to create a borrow");
         //rust git2 doesn't automatically clean up the conflict the conflict must be deleted
         match self.repo.commit(Some("HEAD"), &author, &signature, &msg, &tree, parent_commits){
             Ok(_val) => {
