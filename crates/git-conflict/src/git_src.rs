@@ -96,22 +96,6 @@ impl<'a> GitOps<'a> for Repo<'a> {
             .expect("unable to save the staged changes to memory");
     }
 
-    /// find the ancestor commits and trees
-    fn find_ancesistor(&'a self) -> Result<Commit<'a>, Error> {
-        let head_commits = self.repo.head().unwrap().peel_to_commit().unwrap();
-        let other_branch_commits = self
-            .repo
-            .find_branch(&self.branches.dest_branch, git2::BranchType::Local)
-            .unwrap()
-            .into_reference()
-            .peel_to_commit()
-            .expect("unable to fetch the commit");
-        let oid = self
-            .repo
-            .merge_base(head_commits.id(), other_branch_commits.id())
-            .unwrap();
-        self.repo.find_commit(oid)
-    }
     /// If you want to have the cimmits of both branches run this function
     #[allow(unused_must_use)]
     fn merge_trees(&mut self) {
@@ -177,7 +161,10 @@ impl<'a> GitOps<'a> for Repo<'a> {
     //this function has an embedding implementation
     #[allow(unused_must_use)]
     fn commit(&mut self, parent_commits: &[&Commit], msg: String) -> bool {
-        let tree = self.repo.find_tree(self.index.write_tree().unwrap()).unwrap();
+        let tree = self
+            .repo
+            .find_tree(self.index.write_tree().unwrap())
+            .unwrap();
         // Grabbing the details of the commit
         let signature = self.repo.signature().unwrap().to_owned();
         let config = Config::new().unwrap();

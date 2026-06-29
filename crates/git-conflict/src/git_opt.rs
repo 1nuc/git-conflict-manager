@@ -1,9 +1,9 @@
-use git2::{Index, IndexEntry, build::CheckoutBuilder};
+use git2::{Commit, Error, Index, IndexEntry, build::CheckoutBuilder};
 use std::sync::Arc;
 
 use crate::{GitOps, Measuments, git_src::Repo};
 
-impl<'a> Measuments for Repo<'a> {
+impl<'a> Measuments <'a> for Repo<'a> {
     fn make_entry(
         &self,
         ancestor: IndexEntry,
@@ -64,5 +64,22 @@ impl<'a> Measuments for Repo<'a> {
             .expect("error peeling to a commit in theirs version");
         let parent_commits = &[&ours_parents_commits, &theirs_parents_commits];
         Arc::into_inner(object).unwrap().commit(parent_commits, msg)
+    }
+
+    /// find the ancestor commits and trees
+    fn find_ancesistor(&'a self) -> Result<Commit<'a>, Error> {
+        let head_commits = self.repo.head().unwrap().peel_to_commit().unwrap();
+        let other_branch_commits = self
+            .repo
+            .find_branch(&self.branches.dest_branch, git2::BranchType::Local)
+            .unwrap()
+            .into_reference()
+            .peel_to_commit()
+            .expect("unable to fetch the commit");
+        let oid = self
+            .repo
+            .merge_base(head_commits.id(), other_branch_commits.id())
+            .unwrap();
+        self.repo.find_commit(oid)
     }
 }
