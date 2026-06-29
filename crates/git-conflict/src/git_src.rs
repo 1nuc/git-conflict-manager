@@ -1,11 +1,11 @@
-use git2::{Commit, Error, Index, MergeOptions, Repository, Status, StatusOptions, build::CheckoutBuilder};
+use git2::{Commit, Error, Index, MergeOptions, Repository, Signature, Status, StatusOptions, build::CheckoutBuilder};
 use crate::{GitOps, Initialize, Measuments};
 use std::{env, fs, path::{Path, PathBuf}};
 
 //define the base struct to obtain the branches naming
 pub struct Branches{
-    src_branch: String,
-    dest_branch: String,
+    pub src_branch: String,
+    pub dest_branch: String,
 }
 
 impl Branches{
@@ -157,25 +157,12 @@ impl <'a>GitOps<'a> for Repo<'a>{
     //Making a commit
     //this function has an embedding implementation
     #[allow(unused_must_use)]
-    fn commit(&mut self, mut index: Index, parent_commits: &[&Commit], msg: String)-> bool{
-        // let _=self.index.write();
+    fn commit(&mut self, index: &mut Index, parent_commits: &[&Commit], msg: String)-> bool{
         index.write();
         let tree=self.repo.find_tree(self.index.write_tree().unwrap()).unwrap();
         let signature=self.repo.signature().unwrap().to_owned();
-        // let message=format!("Resolve Conflict: Merge {} branch into {} branch", self.branches.src_branch, self.branches.dest_branch);
-
-        // get the heads commits
-
-        // let head=self.repo.head().unwrap();
-        // // retreive the commits of "ours" branch
-        // let ours_parents_commits=head.peel_to_commit().expect("error peeling to commit in ours version");
-        // let theirs=self.repo.find_reference("MERGE_HEAD").expect("unable to find the second theirs reference");
-        // // retreive the commits of "theirs" branch
-        // let theirs_parents_commits=theirs.peel_to_commit().expect("error peeling to a commit in theirs version");
-        // let parents_commits=&[&ours_parents_commits, &theirs_parents_commits];
-
         //rust git2 doesn't automatically clean up the conflict the conflict must be deleted
-        match self.repo.commit(Some("HEAD"), &signature, &signature, &msg, &tree, parent_commits){
+        match self.repo.commit(Some("HEAD"), &author, &signature, &msg, &tree, parent_commits){
             Ok(_val) => {
                 //after making the commit git must know that the commit is clearing the conflict
                 //therefore, MERGE_HEAD file must be deleted to indicate the success of the merge
@@ -260,7 +247,8 @@ impl <'a>GitOps<'a> for Repo<'a>{
         let files=self.checkout_files();
         let _=self.repo.checkout_index(Some(&mut self.index), Some(&mut self.builder));//revert back the index to match the index to the checkout builder
         self.staging(files); //stage the changes
-        match self.commit(){//commit the changes
+        let index=&self.index;
+        match self.perform_manual_commit(index){//commit the changes
             true => println!("conflict is resolved"),
             false => panic!("error resolving the conflict"),
         }
@@ -271,6 +259,17 @@ impl <'a>GitOps<'a> for Repo<'a>{
     }
     //resolve conflict by merging the changes from both branches : e.g. delete the conflict
     //markers
+
+    //resolves the conflict between two branches by combining the changes of both branches
+    fn resolve_conflict_by_combining(&mut self){
+        let files=self.merge_files();
+        self.staging(files); //stage the changes
+        match self.commit(){//commit the changes
+            true => println!("conflict is resolved"),
+            false => panic!("error resolving the conflict"),
+        }
+    }
+
     fn remove_conflict_markers(&self, file_name: String){
         let file_path=fs::read_to_string(&file_name).unwrap();
         let modify_content=file_path.lines().filter(
@@ -283,7 +282,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
     // This function merge the contents of the conflicted branches
     fn merge_files(&mut self) -> Vec<String>{
         // return the conflicted files
-        let files=self.return_files(Status::CONFLICTED).expect("files cannot be found");
+        let files=self.return_conflicted_files(Status::CONFLICTED).expect("files cannot be found");
         // merge the contents of each file from the conflicted branches
         let _=files.iter().map(|x| {
             Self::remove_conflict_markers(self, x.to_string());
@@ -291,13 +290,4 @@ impl <'a>GitOps<'a> for Repo<'a>{
         files
     }
 
-    //resolves the conflict between two branches by combining the changes of both branches
-    fn resolve_conflict_by_combining(&mut self){
-        let files=self.merge_files();
-        self.staging(files); //stage the changes
-        match self.commit(){//commit the changes
-            true => println!("conflict is resolved"),
-            false => panic!("error resolving the conflict"),
-        }
-    }
 }

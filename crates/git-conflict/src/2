@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use git2::{Commit, Error, Index, IndexEntry, Repository, Status};
+use git2::{Commit, Error, Index, IndexEntry, Signature, Repository, Status};
 pub mod git_src;
 pub mod git_opt;
 
