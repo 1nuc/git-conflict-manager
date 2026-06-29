@@ -1,9 +1,9 @@
-use git2::{Commit, Error, Index, MergeOptions, ObjectType, Repository, Status, StatusOptions, TreeWalkMode, TreeWalkResult, build::CheckoutBuilder};
+use git2::{Commit, Error, Index, MergeOptions, Repository, Status, StatusOptions, build::CheckoutBuilder};
 use crate::{GitOps, Initialize, Measuments};
 use std::{env, fs, path::{Path, PathBuf}};
 
 //define the base struct to obtain the branches naming
-struct Branches{
+pub struct Branches{
     src_branch: String,
     dest_branch: String,
 }
@@ -19,11 +19,11 @@ impl Branches{
 //creating a struct that contains the essential details for a branch 
 #[allow(dead_code)]
 pub struct Repo<'a>{
-    path: PathBuf,
-    repo: Repository,
-    index: Index, //this is the where the index of the files getting updated
-    branches: Branches,
-    builder: CheckoutBuilder<'a>,
+    pub path: PathBuf,
+    pub repo: Repository,
+    pub index: Index, //this is the where the index of the files getting updated
+    pub branches: Branches,
+    pub builder: CheckoutBuilder<'a>,
 }
 
 #[allow(non_snake_case)]
@@ -126,10 +126,11 @@ impl <'a>GitOps<'a> for Repo<'a>{
             let base=entry.our.unwrap();
             index.add(&self.make_entry(ancestor, base, true));
         });
+        // Apply the index changes to the repository
+        // TODO: Separate the function and make it smaller
+        self.apply_index_changes(index);
 
-        self.repo.set_index(&mut index).expect("Unable to write the index to the repository"); //staging
-                                                                                               //area
-        let new_tree=self.repo.find_tree(index.write_tree().unwrap()).unwrap();
+        let new_tree=self.repo.find_tree(self.index.write_tree().unwrap()).unwrap();
         let signature=self.repo.signature().unwrap().to_owned();
         let message=format!("Resolve Conflict through tree resolution:  {} branch into {} branch", self.branches.src_branch, self.branches.dest_branch);
         // get the heads commits
@@ -148,27 +149,33 @@ impl <'a>GitOps<'a> for Repo<'a>{
                     fs::remove_file(merge_head_path).expect("unable to remove the file");
                     //deleting the merge conflict if the commit didn't auto delete
                 }
+                println!("conflict is resolved");
             },
             _=> println!("Commit is not successful"),
         }
     }
     //Making a commit
     //this function has an embedding implementation
-    fn commit(&mut self)-> bool{
-        let _=self.index.write();
+    #[allow(unused_must_use)]
+    fn commit(&mut self, mut index: Index, parent_commits: &[&Commit], msg: String)-> bool{
+        // let _=self.index.write();
+        index.write();
         let tree=self.repo.find_tree(self.index.write_tree().unwrap()).unwrap();
         let signature=self.repo.signature().unwrap().to_owned();
-        let message=format!("Resolve Conflict: Merge {} branch into {} branch", self.branches.src_branch, self.branches.dest_branch);
+        // let message=format!("Resolve Conflict: Merge {} branch into {} branch", self.branches.src_branch, self.branches.dest_branch);
+
         // get the heads commits
-        let head=self.repo.head().unwrap();
-        // retreive the commits of "ours" branch
-        let ours_parents_commits=head.peel_to_commit().expect("error peeling to commit in ours version");
-        let theirs=self.repo.find_reference("MERGE_HEAD").expect("unable to find the second theirs reference");
-        // retreive the commits of "theirs" branch
-        let theirs_parents_commits=theirs.peel_to_commit().expect("error peeling to a commit in theirs version");
-        let parents_commits=&[&ours_parents_commits, &theirs_parents_commits];
+
+        // let head=self.repo.head().unwrap();
+        // // retreive the commits of "ours" branch
+        // let ours_parents_commits=head.peel_to_commit().expect("error peeling to commit in ours version");
+        // let theirs=self.repo.find_reference("MERGE_HEAD").expect("unable to find the second theirs reference");
+        // // retreive the commits of "theirs" branch
+        // let theirs_parents_commits=theirs.peel_to_commit().expect("error peeling to a commit in theirs version");
+        // let parents_commits=&[&ours_parents_commits, &theirs_parents_commits];
+
         //rust git2 doesn't automatically clean up the conflict the conflict must be deleted
-        match self.repo.commit(Some("HEAD"), &signature, &signature, &message, &tree, parents_commits){
+        match self.repo.commit(Some("HEAD"), &signature, &signature, &msg, &tree, parent_commits){
             Ok(_val) => {
                 //after making the commit git must know that the commit is clearing the conflict
                 //therefore, MERGE_HEAD file must be deleted to indicate the success of the merge
@@ -188,7 +195,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
 
     //return the file with conditions  
     //this function has an embedding implementation
-    fn return_files(&self,condition: Status)-> Option<Vec<String>>{
+    fn return_conflicted_files(&self,condition: Status)-> Option<Vec<String>>{
         let mut options=StatusOptions::new();
         options.include_untracked(false).recurse_untracked_dirs(false);
         let status=self.repo.statuses(Some(&mut options)).unwrap();
@@ -216,7 +223,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
 
     // In most cases this is the prefered choice for programmers
     // The checkout is the first step towards changing the index
-    fn checkout_local(&mut self) -> &mut Self{
+    fn checkout_version(&mut self, ours: bool) -> &mut Self{
         let head_branch= self.repo.head()
             .expect("unable to return the reference")
             .shorthand()
@@ -227,33 +234,19 @@ impl <'a>GitOps<'a> for Repo<'a>{
            panic!("head is not pointing to any branch"); 
         }
         else {
-            self.builder.use_ours(true);
+            match ours{
+                true => self.builder.use_ours(true),
+                false => self.builder.use_theirs(true),
+            };
         }
         self
     }
 
-
-    // A rarely used but useful option
-    fn checkout_foreign(&mut self) -> &mut Self{
-        let head_branch= self.repo.head()
-            .expect("unable to return the reference")
-            .shorthand()
-            .expect("unable to retrieve the branch namepointed by the head")
-            .to_string();
-        //checking the branch pointed by the head to build the checkout
-        if head_branch!=self.branches.src_branch && head_branch!=self.branches.dest_branch{
-           panic!("head is not pointing to any branch"); 
-        }
-        else {
-            self.builder.use_theirs(true);
-        }
-        self
-    }
     //this function has an embedding implementation
     #[allow(unused_must_use)]
     fn checkout_files(&mut self) -> Vec<String>{
         //add files paths to be checked out with the new merge 
-        let files=self.return_files(Status::CONFLICTED).expect("files cannot be found");
+        let files=self.return_conflicted_files(Status::CONFLICTED).expect("files cannot be found");
         // specify the files for which the checkout is to be held for
         files.iter().map(|x| {
            //the below function adds the files to the checkout builder 

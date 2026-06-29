@@ -8,11 +8,10 @@ pub trait GitOps <'a>{
     fn find_ancesistor(&'a self)-> Result<Commit<'a>, Error>;
     fn merge_trees(&mut self);
     fn staging(&mut self, files: Vec<String>);
-    fn commit(&mut self)-> bool;
-    fn return_files(&self,condition: Status)-> Option<Vec<String>>;
+    fn commit(&mut self, mut index: Index, parent_commits: &[&Commit], msg: String)-> bool;
+    fn return_conflicted_files(&self,condition: Status)-> Option<Vec<String>>;
     fn merge(&self,branch_1_commit: Commit, branch_2_commit: Commit) -> Result<Index, Error>;
-    fn checkout_local(&mut self) -> &mut Self;
-    fn checkout_foreign(&mut self) -> &mut Self;
+    fn checkout_version(&mut self, ours: bool) -> &mut Self;
     fn checkout_files(&mut self) -> Vec<String>;
     fn resolve_conflict_by_discarding(&mut self);
     fn does_conflict_exists(&self) -> bool;
@@ -27,4 +26,5 @@ pub trait Initialize {
 }
 pub trait Measuments{
     fn make_entry(&self, ancestor:IndexEntry, base:IndexEntry, parent_interference: bool)-> IndexEntry;
+    fn apply_index_changes(&mut self, index: Index);
 }

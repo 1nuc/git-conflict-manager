@@ -60,16 +60,15 @@ fn main(){
     }
     match opt{
         1 =>{
-            git_control.checkout_local().resolve_conflict_by_discarding();
+            git_control.checkout_version(true).resolve_conflict_by_discarding();
         },
         2 =>{
-            git_control.checkout_foreign().resolve_conflict_by_discarding();
+            git_control.checkout_version(false).resolve_conflict_by_discarding();
         },
         3 =>{
             git_control.resolve_conflict_by_combining();
         },
         4 =>{
-            println!("should display some commits");
             git_control.merge_trees();
         }
         5 =>{
