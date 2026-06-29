@@ -1,10 +1,13 @@
 use crate::{GitOps, Initialize, Measuments};
 use git2::{
-    Commit, Config, Index, MergeOptions, Repository, Signature, Status, StatusOptions, Time,
+    Commit, Config, Index, Repository, Signature, Status, StatusOptions, Time,
     build::CheckoutBuilder,
 };
 use std::{
-    env, fs, path::{Path, PathBuf}, sync::{Arc, MutexGuard}, time::{SystemTime, UNIX_EPOCH}
+    env, fs,
+    path::{Path, PathBuf},
+    sync::{Arc},
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 //define the base struct to obtain the branches naming
@@ -97,26 +100,24 @@ impl<'a> GitOps<'a> for Repo<'a> {
     /// If you want to have the cimmits of both branches run this function
     #[allow(unused_must_use)]
     fn merge_trees(&mut self) {
-
-        let object=Arc::new(&mut *self);
-        let mut_self=object.clone();
-        let (index, src_commit, ancestor)=mut_self.resolve_conflict_tree_level();
+        let (index, src_commit, ancestor) = self.resolve_conflict_tree_level();
         // Apply the index changes to the repository
-        // TODO: Separate the function and make it smaller
-        Arc::into_inner(object.clone()).unwrap().apply_index_changes(index);
+        self.apply_index_changes(index);
 
         let msg = format!(
             "Resolve Conflict through tree resolution:  {} branch into {} branch",
-            mut_self.branches.src_branch, mut_self.branches.dest_branch
+            self.branches.src_branch, self.branches.dest_branch
         );
         // get the heads commits
         let parent_commits = &[&src_commit, &ancestor];
 
-        match Arc::into_inner(object).unwrap().commit(parent_commits, msg){
+        match 
+            self
+            .commit(parent_commits, msg)
+        {
             true => println!("conflict is resolved"),
             false => panic!("error resolving the conflict"),
         }
-
     }
     //Making a commit
     //this function has an embedding implementation
