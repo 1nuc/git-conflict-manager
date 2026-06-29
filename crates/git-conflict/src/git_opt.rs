@@ -1,4 +1,4 @@
-use git2::{Commit, Error, Index, IndexEntry, build::CheckoutBuilder};
+use git2::{Commit, Error, Index, IndexEntry, MergeOptions, build::CheckoutBuilder};
 use std::sync::Arc;
 
 use crate::{GitOps, Measuments, git_src::Repo};
@@ -81,5 +81,56 @@ impl<'a> Measuments <'a> for Repo<'a> {
             .merge_base(head_commits.id(), other_branch_commits.id())
             .unwrap();
         self.repo.find_commit(oid)
+    }
+
+    fn resolve_conflict_tree_level(&self) -> (Index, Commit, Commit) {
+        let src_branch = self.repo.head().expect("unable to get the head");
+
+        let src_branch_commit = src_branch
+            .peel_to_commit()
+            .expect("unable to fetch the commit");
+        let src_branch_tree = src_branch_commit.tree().expect("unable to fetch the tree");
+
+        let other_branch = self
+            .repo
+            .find_branch(&self.branches.dest_branch, git2::BranchType::Local)
+            .expect("unable to fetch other branch")
+            .into_reference();
+
+        let other_branch_tree = other_branch
+            .peel_to_commit()
+            .expect("unable to fetch the commit in the dest branch")
+            .tree()
+            .expect("unable to fetch the tree in the dest branch");
+
+        let ancestor = self
+            .find_ancesistor()
+            .expect("There is no common parent between those commits");
+
+        let ancestor_tree = ancestor.tree().unwrap();
+
+        let mut merged_options = MergeOptions::default();
+        // let mut checkout_builder=CheckoutBuilder::default();
+
+        // The below trees are conflicted
+        let merged_index = self
+            .repo
+            .merge_trees(
+                &ancestor_tree,
+                &src_branch_tree,
+                &other_branch_tree,
+                Some(merged_options.patience(true)),
+            )
+            .unwrap();
+        let conflicts = merged_index.conflicts().unwrap();
+        // the above index is created but its not connected to a repostiroy
+        let mut index = Index::new().unwrap();
+        conflicts.map(|conf| {
+            let entry = conf.unwrap();
+            let ancestor = entry.ancestor.unwrap();
+            let base = entry.our.unwrap();
+            index.add(&self.make_entry(ancestor, base, true));
+        });
+        (index, src_branch_commit, ancestor)
     }
 }

@@ -1,12 +1,10 @@
 use crate::{GitOps, Initialize, Measuments};
 use git2::{
-    Commit, Config, Error, Index, MergeOptions, Repository, Signature, Status, StatusOptions, Time,
+    Commit, Config, Index, MergeOptions, Repository, Signature, Status, StatusOptions, Time,
     build::CheckoutBuilder,
 };
 use std::{
-    env, fs,
-    path::{Path, PathBuf},
-    time::{SystemTime, UNIX_EPOCH},
+    env, fs, path::{Path, PathBuf}, sync::{Arc, MutexGuard}, time::{SystemTime, UNIX_EPOCH}
 };
 
 //define the base struct to obtain the branches naming
@@ -99,63 +97,26 @@ impl<'a> GitOps<'a> for Repo<'a> {
     /// If you want to have the cimmits of both branches run this function
     #[allow(unused_must_use)]
     fn merge_trees(&mut self) {
-        let src_branch = self.repo.head().expect("unable to get the head");
 
-        let src_branch_commit = src_branch
-            .peel_to_commit()
-            .expect("unable to fetch the commit");
-        let src_branch_tree = src_branch_commit.tree().expect("unable to fetch the tree");
-
-        let other_branch = self
-            .repo
-            .find_branch(&self.branches.dest_branch, git2::BranchType::Local)
-            .expect("unable to fetch other branch")
-            .into_reference();
-
-        let other_branch_tree = other_branch
-            .peel_to_commit()
-            .expect("unable to fetch the commit in the dest branch")
-            .tree()
-            .expect("unable to fetch the tree in the dest branch");
-
-        let ancestor = self
-            .find_ancesistor()
-            .expect("There is no common parent between those commits");
-
-        let ancestor_tree = ancestor.tree().unwrap();
-
-        let mut merged_options = MergeOptions::default();
-        // let mut checkout_builder=CheckoutBuilder::default();
-
-        // The below trees are conflicted
-        let merged_index = self
-            .repo
-            .merge_trees(
-                &ancestor_tree,
-                &src_branch_tree,
-                &other_branch_tree,
-                Some(merged_options.patience(true)),
-            )
-            .unwrap();
-        let conflicts = merged_index.conflicts().unwrap();
-        // the above index is created but its not connected to a repostiroy
-        let mut index = Index::new().unwrap();
-        conflicts.map(|conf| {
-            let entry = conf.unwrap();
-            let ancestor = entry.ancestor.unwrap();
-            let base = entry.our.unwrap();
-            index.add(&self.make_entry(ancestor, base, true));
-        });
+        let object=Arc::new(&mut *self);
+        let mut_self=object.clone();
+        let (index, src_commit, ancestor)=mut_self.resolve_conflict_tree_level();
         // Apply the index changes to the repository
         // TODO: Separate the function and make it smaller
-        self.apply_index_changes(index);
+        Arc::into_inner(object.clone()).unwrap().apply_index_changes(index);
 
-        let message = format!(
+        let msg = format!(
             "Resolve Conflict through tree resolution:  {} branch into {} branch",
-            self.branches.src_branch, self.branches.dest_branch
+            mut_self.branches.src_branch, mut_self.branches.dest_branch
         );
         // get the heads commits
-        let parents_commits = &[&src_branch_commit, &ancestor];
+        let parent_commits = &[&src_commit, &ancestor];
+
+        match Arc::into_inner(object).unwrap().commit(parent_commits, msg){
+            true => println!("conflict is resolved"),
+            false => panic!("error resolving the conflict"),
+        }
+
     }
     //Making a commit
     //this function has an embedding implementation
@@ -224,20 +185,7 @@ impl<'a> GitOps<'a> for Repo<'a> {
         }
         Some(list_of_conflicted_files)
     }
-    //Merge function
 
-    fn merge(&self, branch_1_commit: Commit, branch_2_commit: Commit) -> Result<Index, Error> {
-        let merge_options = MergeOptions::new();
-        match self
-            .repo
-            .merge_commits(&branch_1_commit, &branch_2_commit, Some(&merge_options))
-        {
-            Ok(index) => Ok(index),
-            Error => Error,
-        }
-    }
-
-    // In most cases this is the prefered choice for programmers
     // The checkout is the first step towards changing the index
     fn checkout_version(&mut self, ours: bool) -> &mut Self {
         let head_branch = self
