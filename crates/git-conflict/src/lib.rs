@@ -8,7 +8,7 @@ pub trait GitOps <'a>{
     fn find_ancesistor(&'a self)-> Result<Commit<'a>, Error>;
     fn merge_trees(&mut self);
     fn staging(&mut self, files: Vec<String>);
-    fn commit(&mut self, index: &mut Index, parent_commits: &[&Commit], msg: String)-> bool;
+    fn commit(&mut self, index: Index, parent_commits: &[&Commit], msg: String)-> bool;
     fn return_conflicted_files(&self,condition: Status)-> Option<Vec<String>>;
     fn merge(&self,branch_1_commit: Commit, branch_2_commit: Commit) -> Result<Index, Error>;
     fn checkout_version(&mut self, ours: bool) -> &mut Self;
@@ -27,5 +27,5 @@ pub trait Initialize {
 pub trait Measuments{
     fn make_entry(&self, ancestor:IndexEntry, base:IndexEntry, parent_interference: bool)-> IndexEntry;
     fn apply_index_changes(&mut self, index: Index);
-    fn perform_manual_commit(&mut self, index: &Index)-> bool;
+    fn perform_manual_commit(&mut self)-> bool;
 }

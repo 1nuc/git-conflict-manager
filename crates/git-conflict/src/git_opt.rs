@@ -33,8 +33,9 @@ impl <'a> Measuments for Repo<'a>{
         self.repo.checkout_index(Some(&mut index), Some(checkout_builder.force())).unwrap();
         self.index=index;
     }
-    fn perform_manual_commit(&mut self, index: &Index)-> bool{
+    fn perform_manual_commit(&mut self)-> bool{
         let msg=format!("Resolve Conflict: Merge {} branch into {} branch", self.branches.src_branch, self.branches.dest_branch);
+        let index=self.index;
         // get the heads commits
         let head=self.repo.head().unwrap();
         // // retreive the commits of "ours" branch

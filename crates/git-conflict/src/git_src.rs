@@ -157,7 +157,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
     //Making a commit
     //this function has an embedding implementation
     #[allow(unused_must_use)]
-    fn commit(&mut self, index: &mut Index, parent_commits: &[&Commit], msg: String)-> bool{
+    fn commit(&mut self, index: Index, parent_commits: &[&Commit], msg: String)-> bool{
         index.write();
         let tree=self.repo.find_tree(self.index.write_tree().unwrap()).unwrap();
         let signature=self.repo.signature().unwrap().to_owned();
@@ -247,8 +247,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
         let files=self.checkout_files();
         let _=self.repo.checkout_index(Some(&mut self.index), Some(&mut self.builder));//revert back the index to match the index to the checkout builder
         self.staging(files); //stage the changes
-        let index=&self.index;
-        match self.perform_manual_commit(index){//commit the changes
+        match self.perform_manual_commit(){//commit the changes
             true => println!("conflict is resolved"),
             false => panic!("error resolving the conflict"),
         }
@@ -264,7 +263,7 @@ impl <'a>GitOps<'a> for Repo<'a>{
     fn resolve_conflict_by_combining(&mut self){
         let files=self.merge_files();
         self.staging(files); //stage the changes
-        match self.commit(){//commit the changes
+        match self.perform_manual_commit(){//commit the changes
             true => println!("conflict is resolved"),
             false => panic!("error resolving the conflict"),
         }
