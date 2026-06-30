@@ -1,11 +1,12 @@
 use crate::{GitOps, Initialize, Measuments};
 use git2::{
-    Commit, Config, Index, Oid, Repository, Signature, Status, StatusOptions, Time, build::CheckoutBuilder
+    Commit, Config, Index, Oid, Repository, Signature, Status, StatusOptions, Time,
+    build::CheckoutBuilder,
 };
 use std::{
     env, fs,
     path::{Path, PathBuf},
-    sync::{Arc},
+    sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -111,8 +112,8 @@ impl<'a> GitOps<'a> for Repo<'a> {
         // Apply the index changes to the repository
         // self.apply_index_changes(index);
         //
-        // match 
-        //    self 
+        // match
+        //    self
         //     .commit(parent_commits, msg)
         // {
         //     true => println!("conflict is resolved"),
@@ -141,18 +142,18 @@ impl<'a> GitOps<'a> for Repo<'a> {
         let email = config.get_str("user.email").unwrap();
         let time = Time::new(now, 0);
         let author = Signature::new(user_name, email, &time).expect("unable to create a borrow");
-        let parent_commits=parent_commits.iter().map(|x|{
-            self.repo.find_commit(*x).unwrap()
-        }).collect::<Vec<&Commit>>();
+        let p_cm = parent_commits
+            .iter()
+            .map(|x| self.repo.find_commit(*x).unwrap())
+            .collect::<Vec<Commit>>();
+        let p_cm = p_cm.iter().collect::<Vec<&Commit>>();
+        let p_commits = p_cm.as_slice();
         //rust git2 doesn't automatically clean up the conflict the conflict must be deleted
-        match self.repo.commit(
-            Some("HEAD"),
-            &author,
-            &signature,
-            &msg,
-            &tree,
-            parent_commits,
-        ) {
+
+        match self
+            .repo
+            .commit(Some("HEAD"), &author, &signature, &msg, &tree, p_commits)
+        {
             Ok(_val) => {
                 //after making the commit git must know that the commit is clearing the conflict
                 //therefore, MERGE_HEAD file must be deleted to indicate the success of the merge
