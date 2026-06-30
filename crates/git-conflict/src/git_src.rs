@@ -101,8 +101,6 @@ impl<'a> GitOps<'a> for Repo<'a> {
     #[allow(unused_must_use)]
     fn merge_trees(&mut self) {
         let (index, src_commit, ancestor) = self.resolve_conflict_tree_level();
-        // Apply the index changes to the repository
-        self.apply_index_changes(index);
 
         let msg = format!(
             "Resolve Conflict through tree resolution:  {} branch into {} branch",
@@ -111,13 +109,16 @@ impl<'a> GitOps<'a> for Repo<'a> {
         // get the heads commits
         let parent_commits = &[&src_commit, &ancestor];
 
-        match 
-            self
-            .commit(parent_commits, msg)
-        {
-            true => println!("conflict is resolved"),
-            false => panic!("error resolving the conflict"),
-        }
+        // Apply the index changes to the repository
+        // self.apply_index_changes(index);
+        //
+        // match 
+        //    self 
+        //     .commit(parent_commits, msg)
+        // {
+        //     true => println!("conflict is resolved"),
+        //     false => panic!("error resolving the conflict"),
+        // }
     }
     //Making a commit
     //this function has an embedding implementation

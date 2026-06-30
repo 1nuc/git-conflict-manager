@@ -50,7 +50,7 @@ impl<'a> Measuments <'a> for Repo<'a> {
         let mut_self = object.clone();
         // get the heads commits
         let head = mut_self.repo.head().unwrap();
-        // // retreive the commits of "ours" branch
+        // retreive the commits of "ours" branch and theres
         let ours_parents_commits = head
             .peel_to_commit()
             .expect("error peeling to commit in ours version");
@@ -83,7 +83,8 @@ impl<'a> Measuments <'a> for Repo<'a> {
         self.repo.find_commit(oid)
     }
 
-    fn resolve_conflict_tree_level(&self) -> (Index, Commit, Commit) {
+    #[allow(unused_must_use)]
+    fn resolve_conflict_tree_level(&'a self) -> (Index, Commit<'a>, Commit<'a>) {
         let src_branch = self.repo.head().expect("unable to get the head");
 
         let src_branch_commit = src_branch
