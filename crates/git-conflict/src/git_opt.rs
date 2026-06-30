@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::{GitOps, Measuments, git_src::Repo};
 
-impl<'a> Measuments <'a> for Repo<'a> {
+impl<'a> Measuments<'a> for Repo<'a> {
     fn make_entry(
         &self,
         ancestor: IndexEntry,
@@ -46,24 +46,25 @@ impl<'a> Measuments <'a> for Repo<'a> {
             "Resolve Conflict: Merge {} branch into {} branch",
             self.branches.src_branch, self.branches.dest_branch
         );
-        let object = Arc::new(&mut *self);
-        let mut_self = object.clone();
         // get the heads commits
-        let head = mut_self.repo.head().unwrap();
         // retreive the commits of "ours" branch and theres
-        let ours_parents_commits = head
+        let ours_parents_commits = self
+            .repo
+            .head()
+            .expect("unable to find the head branch")
             .peel_to_commit()
-            .expect("error peeling to commit in ours version");
-        let theirs = mut_self
+            .expect("error peeling to commit in ours version")
+            .id();
+        let theirs_parents_commits = self
             .repo
             .find_reference("MERGE_HEAD")
-            .expect("unable to find the second theirs reference");
-        // // retreive the commits of "theirs" branch
-        let theirs_parents_commits = theirs
+            .expect("unable to find the second theirs reference")
             .peel_to_commit()
-            .expect("error peeling to a commit in theirs version");
-        let parent_commits = &[&ours_parents_commits, &theirs_parents_commits];
-        Arc::into_inner(object).unwrap().commit(parent_commits, msg)
+            .expect("error in peeling to a commit in theirs version")
+            .id();
+        // // retreive the commits of "theirs" branch
+        let parent_commits = &[ours_parents_commits, theirs_parents_commits];
+        self.commit(parent_commits, msg)
     }
 
     /// find the ancestor commits and trees

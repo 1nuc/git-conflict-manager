@@ -1,7 +1,6 @@
 use crate::{GitOps, Initialize, Measuments};
 use git2::{
-    Commit, Config, Index, Repository, Signature, Status, StatusOptions, Time,
-    build::CheckoutBuilder,
+    Commit, Config, Index, Oid, Repository, Signature, Status, StatusOptions, Time, build::CheckoutBuilder
 };
 use std::{
     env, fs,
@@ -123,7 +122,7 @@ impl<'a> GitOps<'a> for Repo<'a> {
     //Making a commit
     //this function has an embedding implementation
     #[allow(unused_must_use)]
-    fn commit(&mut self, parent_commits: &[&Commit], msg: String) -> bool {
+    fn commit(&mut self, parent_commits: &[Oid], msg: String) -> bool {
         let tree = self
             .repo
             .find_tree(self.index.write_tree().unwrap())
@@ -142,6 +141,9 @@ impl<'a> GitOps<'a> for Repo<'a> {
         let email = config.get_str("user.email").unwrap();
         let time = Time::new(now, 0);
         let author = Signature::new(user_name, email, &time).expect("unable to create a borrow");
+        let parent_commits=parent_commits.iter().map(|x|{
+            self.repo.find_commit(*x).unwrap()
+        }).collect::<Vec<&Commit>>();
         //rust git2 doesn't automatically clean up the conflict the conflict must be deleted
         match self.repo.commit(
             Some("HEAD"),

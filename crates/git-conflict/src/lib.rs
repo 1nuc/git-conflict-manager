@@ -1,13 +1,13 @@
 use std::path::PathBuf;
 
-use git2::{Commit, Error, Index, IndexEntry, Repository, Status};
+use git2::{Commit, Error, Index, IndexEntry, Oid, Repository, Status};
 pub mod git_opt;
 pub mod git_src;
 
 pub trait GitOps<'a> {
     fn merge_trees(&mut self);
     fn staging(&mut self, files: Vec<String>);
-    fn commit(&mut self, parent_commits: &[&Commit], msg: String) -> bool;
+    fn commit(&mut self, parent_commits: &[Oid], msg: String) -> bool;
     fn return_conflicted_files(&self, condition: Status) -> Option<Vec<String>>;
     fn checkout_version(&mut self, ours: bool) -> &mut Self;
     fn checkout_files(&mut self) -> Vec<String>;
