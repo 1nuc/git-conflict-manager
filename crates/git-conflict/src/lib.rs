@@ -33,4 +33,5 @@ pub trait Measuments <'a>{
     fn find_ancesistor(&'a self) -> Result<Commit<'a>, Error>;
     fn perform_manual_commit(&mut self) -> bool;
     fn resolve_conflict_tree_level(&self) -> (Index, Oid, Oid);
+    fn print_index_contents(&self,index: Index);
 }

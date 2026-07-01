@@ -31,18 +31,18 @@ impl<'a> Measuments<'a> for Repo<'a> {
         }
     }
     fn apply_index_changes(&mut self, mut index: Index) {
-        index.write().expect("Error in writing the index back to the tree");
+        index
+            .write()
+            .expect("Error in writing the index back to the tree");
         self.repo
             .set_index(&mut index)
             .expect("Unable to write the index to the repository"); //staging
         let mut checkout_builder = CheckoutBuilder::new();
         // let mut index=self.repo.index().unwrap();
-        println!("{:?}", index.path().unwrap());
         self.repo
             .checkout_index(Some(&mut index), Some(checkout_builder.force()))
             .unwrap();
         self.index = index;
-
     }
     fn perform_manual_commit(&mut self) -> bool {
         let msg = format!(
@@ -129,29 +129,55 @@ impl<'a> Measuments<'a> for Repo<'a> {
             .unwrap();
         let conflicts = merged_index.conflicts().unwrap();
         // the above index is created but its not connected to a repostiroy
-        let index_path=self.repo.path().join("index");
+        let index_path = self.repo.path().join("index");
         let mut index = Index::open(index_path.as_path()).expect("unable to create an index");
-        let mut conflicted_files=Vec::new();
+        let mut conflicted_files = Vec::new();
         conflicts.map(|conf| {
             let entry = conf.unwrap();
             let ancestor = entry.ancestor.unwrap();
             let their = entry.their.unwrap();
             let base = entry.our.unwrap();
-            index.add(&self.make_entry(ancestor, base, true)).expect("Error in resolving conflicted index entries");
-            let conflicted_files_path =PathBuf::from(String::from_utf8(their.path).expect("unable to get the file path"));
+            index
+                .add(&self.make_entry(ancestor, base, true))
+                .expect("Error in resolving conflicted index entries");
+            let conflicted_files_path =
+                PathBuf::from(String::from_utf8(their.path).expect("unable to get the file path"));
             conflicted_files.push(conflicted_files_path);
         });
         // clearing the index from the conflicted files
-        conflicted_files.into_iter().for_each(|f|{
-        // delete the conflicts in the old index and add the remaining files to the updated index
-            merged_index.conflict_remove(&f).expect("unable to remove the entry");
+        conflicted_files.into_iter().for_each(|f| {
+            // delete the conflicts in the old index and add the remaining files to the updated index
+            merged_index
+                .conflict_remove(&f)
+                .expect("unable to remove the entry");
         });
 
         // now adding the remaining entries to the index
-        merged_index.iter().map(|x|{
-            index.add(&x).expect("error in adding the remaining entries");
+        merged_index.iter().map(|x| {
+            index
+                .add(&x)
+                .expect("error in adding the remaining entries");
         });
 
         (index, src_branch_commit.id(), ancestor.id())
+    }
+
+    fn print_index_contents(&self, index: Index){
+        for entry in index.iter(){
+            let path=String::from_utf8(entry.path).expect("unable to find path");
+            if let Ok(obj)=self.repo.find_object(entry.id, None){
+                if let Some(blob)=obj.as_blob(){
+                    let content=String::from_utf8(blob.content().to_vec());
+                    println!("{:?}", path);
+                    println!("{:?}", content);
+                }
+                else{
+                    println!("No content to display");
+                }
+            }
+            else {
+                println!("No object with that entry");
+            }
+        }
     }
 }
