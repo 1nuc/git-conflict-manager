@@ -1,7 +1,6 @@
 use crate::{GitOps, Initialize, Measuments};
 use git2::{
-    Commit, Config, Index, Oid, Repository, Signature, Status, StatusOptions, Time,
-    build::CheckoutBuilder,
+    Commit, Index, Oid, Repository, Signature, Status, StatusOptions, Time, build::CheckoutBuilder,
 };
 use std::{
     env, fs,
@@ -111,10 +110,7 @@ impl<'a> GitOps<'a> for Repo<'a> {
         // Apply the index changes to the repository
         self.apply_index_changes(index);
 
-        match
-           self
-            .commit(parent_commits, msg)
-        {
+        match self.commit(parent_commits, msg) {
             true => println!("conflict is resolved"),
             false => panic!("error resolving the conflict"),
         }
@@ -129,7 +125,12 @@ impl<'a> GitOps<'a> for Repo<'a> {
             .unwrap();
         // Grabbing the details of the commit
         let signature = self.repo.signature().unwrap().to_owned();
-        let config = Config::new().unwrap();
+        let config = self
+            .repo
+            .config()
+            .expect("Error in retreiving the configuration")
+            .snapshot()
+            .expect("error in creating a snapshot");
         // Considering the actual system time for establishing a commit
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)

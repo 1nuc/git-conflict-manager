@@ -31,15 +31,18 @@ impl<'a> Measuments<'a> for Repo<'a> {
         }
     }
     fn apply_index_changes(&mut self, mut index: Index) {
-        index.write().expect("Error in writing the tree");
+        index.write().expect("Error in writing the index back to the tree");
         self.repo
             .set_index(&mut index)
             .expect("Unable to write the index to the repository"); //staging
         let mut checkout_builder = CheckoutBuilder::new();
+        // let mut index=self.repo.index().unwrap();
+        println!("{:?}", index.path().unwrap());
         self.repo
             .checkout_index(Some(&mut index), Some(checkout_builder.force()))
             .unwrap();
         self.index = index;
+
     }
     fn perform_manual_commit(&mut self) -> bool {
         let msg = format!(
@@ -126,7 +129,8 @@ impl<'a> Measuments<'a> for Repo<'a> {
             .unwrap();
         let conflicts = merged_index.conflicts().unwrap();
         // the above index is created but its not connected to a repostiroy
-        let mut index = Index::new().unwrap();
+        let index_path=self.repo.path().join("index");
+        let mut index = Index::open(index_path.as_path()).expect("unable to create an index");
         let mut conflicted_files=Vec::new();
         conflicts.map(|conf| {
             let entry = conf.unwrap();
