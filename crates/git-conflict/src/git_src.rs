@@ -6,7 +6,6 @@ use git2::{
 use std::{
     env, fs,
     path::{Path, PathBuf},
-    sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
 };
 
