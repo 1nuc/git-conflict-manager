@@ -107,18 +107,18 @@ impl<'a> GitOps<'a> for Repo<'a> {
             self.branches.src_branch, self.branches.dest_branch
         );
         // get the heads commits
-        let parent_commits = &[&src_commit, &ancestor];
+        let parent_commits = &[src_commit, ancestor];
 
         // Apply the index changes to the repository
-        // self.apply_index_changes(index);
-        //
-        // match
-        //    self
-        //     .commit(parent_commits, msg)
-        // {
-        //     true => println!("conflict is resolved"),
-        //     false => panic!("error resolving the conflict"),
-        // }
+        self.apply_index_changes(index);
+
+        match
+           self
+            .commit(parent_commits, msg)
+        {
+            true => println!("conflict is resolved"),
+            false => panic!("error resolving the conflict"),
+        }
     }
     //Making a commit
     //this function has an embedding implementation

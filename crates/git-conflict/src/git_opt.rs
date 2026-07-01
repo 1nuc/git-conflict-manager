@@ -1,4 +1,4 @@
-use git2::{Commit, Error, Index, IndexEntry, MergeOptions, build::CheckoutBuilder};
+use git2::{Commit, Error, Index, IndexEntry, MergeOptions, Oid, build::CheckoutBuilder};
 use std::{path::PathBuf, sync::Arc};
 
 use crate::{GitOps, Measuments, git_src::Repo};
@@ -85,7 +85,7 @@ impl<'a> Measuments<'a> for Repo<'a> {
     }
 
     #[allow(unused_must_use)]
-    fn resolve_conflict_tree_level(&'a self) -> (Index, Commit<'a>, Commit<'a>) {
+    fn resolve_conflict_tree_level(&self) -> (Index, Oid, Oid) {
         let src_branch = self.repo.head().expect("unable to get the head");
 
         let src_branch_commit = src_branch
@@ -148,6 +148,6 @@ impl<'a> Measuments<'a> for Repo<'a> {
             index.add(&x).expect("error in adding the remaining entries");
         });
 
-        (index, src_branch_commit, ancestor)
+        (index, src_branch_commit.id(), ancestor.id())
     }
 }
