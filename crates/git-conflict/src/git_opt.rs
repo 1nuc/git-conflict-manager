@@ -1,5 +1,5 @@
 use git2::{Commit, Error, Index, IndexEntry, MergeOptions, build::CheckoutBuilder};
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 
 use crate::{GitOps, Measuments, git_src::Repo};
 
@@ -115,7 +115,7 @@ impl<'a> Measuments<'a> for Repo<'a> {
         // let mut checkout_builder=CheckoutBuilder::default();
 
         // The below trees are conflicted
-        let merged_index = self
+        let mut merged_index = self
             .repo
             .merge_trees(
                 &ancestor_tree,
@@ -127,12 +127,21 @@ impl<'a> Measuments<'a> for Repo<'a> {
         let conflicts = merged_index.conflicts().unwrap();
         // the above index is created but its not connected to a repostiroy
         let mut index = Index::new().unwrap();
+        let mut conflicted_files=Vec::new();
         conflicts.map(|conf| {
             let entry = conf.unwrap();
             let ancestor = entry.ancestor.unwrap();
+            let their = entry.their.unwrap();
             let base = entry.our.unwrap();
             index.add(&self.make_entry(ancestor, base, true));
+            let conflicted_files_path =PathBuf::from(String::from_utf8(their.path).expect("unable to get the file path"));
+            conflicted_files.push(conflicted_files_path);
         });
+        conflicted_files.into_iter().for_each(|f|{
+            merged_index.conflict_remove(&f).expect("unable to remove the entry");
+        });
+
+        // delete the conflicts in the old index and add the remaining files to the updated index
         (index, src_branch_commit, ancestor)
     }
 }
