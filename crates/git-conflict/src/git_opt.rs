@@ -133,15 +133,21 @@ impl<'a> Measuments<'a> for Repo<'a> {
             let ancestor = entry.ancestor.unwrap();
             let their = entry.their.unwrap();
             let base = entry.our.unwrap();
-            index.add(&self.make_entry(ancestor, base, true));
+            index.add(&self.make_entry(ancestor, base, true)).expect("Error in resolving conflicted index entries");
             let conflicted_files_path =PathBuf::from(String::from_utf8(their.path).expect("unable to get the file path"));
             conflicted_files.push(conflicted_files_path);
         });
+        // clearing the index from the conflicted files
         conflicted_files.into_iter().for_each(|f|{
+        // delete the conflicts in the old index and add the remaining files to the updated index
             merged_index.conflict_remove(&f).expect("unable to remove the entry");
         });
 
-        // delete the conflicts in the old index and add the remaining files to the updated index
+        // now adding the remaining entries to the index
+        merged_index.iter().map(|x|{
+            index.add(&x).expect("error in adding the remaining entries");
+        });
+
         (index, src_branch_commit, ancestor)
     }
 }
