@@ -1,4 +1,6 @@
-use git2::{Commit, Error, Index, IndexEntry, MergeOptions, Oid, build::CheckoutBuilder};
+use git2::{
+    Commit, Error, Index, IndexConflict, IndexEntry, MergeOptions, Oid, build::CheckoutBuilder,
+};
 use std::{path::PathBuf, sync::Arc};
 
 use crate::{GitOps, Measuments, git_src::Repo};
@@ -7,25 +9,24 @@ impl<'a> Measuments<'a> for Repo<'a> {
     fn make_entry(
         &self,
         ancestor: IndexEntry,
-        base: IndexEntry,
+        base: &IndexEntry,
         parent_interference: bool,
     ) -> IndexEntry {
-        let base_copy = Arc::new(base);
         let index = match parent_interference {
-            true => ancestor,
-            false => Arc::into_inner(base_copy.clone()).unwrap(),
+            true => &ancestor,
+            false => base,
         };
         IndexEntry {
             ctime: index.ctime,
             mtime: index.mtime,
-            path: index.path,
-            dev: base_copy.dev,
-            ino: base_copy.ino,
-            id: base_copy.id,
-            mode: base_copy.mode,
-            uid: base_copy.uid,
-            gid: base_copy.gid,
-            file_size: base_copy.file_size,
+            path: index.path.clone(),
+            dev: base.dev,
+            ino: base.ino,
+            id: base.id,
+            mode: base.mode,
+            uid: base.uid,
+            gid: base.gid,
+            file_size: base.file_size,
             flags: index.flags,
             flags_extended: index.flags_extended,
         }
@@ -127,26 +128,35 @@ impl<'a> Measuments<'a> for Repo<'a> {
                 Some(merged_options.patience(true)),
             )
             .unwrap();
-        let conflicts = merged_index.conflicts().unwrap();
+        let conflicts = merged_index
+            .conflicts()
+            .unwrap()
+            .collect::<Vec<Result<IndexConflict, _>>>();
         // the above index is created but its not connected to a repostiroy
         let index_path = self.repo.path().join("index");
         let mut index = Index::open(index_path.as_path()).expect("unable to create an index");
         let mut conflicted_files = Vec::new();
-        conflicts.map(|conf| {
-            let entry = conf.unwrap();
-            let ancestor = entry.ancestor.unwrap();
-            let their = entry.their.unwrap();
-            let base = entry.our.unwrap();
-            index
-                .add(&self.make_entry(ancestor, base, true))
-                .expect("Error in resolving conflicted index entries");
-            let conflicted_files_path =
-                PathBuf::from(String::from_utf8(their.path).expect("unable to get the file path"));
-            conflicted_files.push(conflicted_files_path);
-        });
+        let mut i: i32=0;
+        conflicts
+            .into_iter()
+            .for_each(|conf: Result<IndexConflict, _>| {
+                i+=1;
+                let entry = conf.unwrap();
+                let ancestor = entry.ancestor.unwrap();
+                let base = entry.our.unwrap();
+                let theirs = entry.their.unwrap();
+                index
+                    .add(&self.make_entry(ancestor, &base, false))
+                    .expect("Error in resolving conflicted index entries");
+                let conflicted_files_path = PathBuf::from(
+                    String::from_utf8(theirs.path).expect("unable to get the file path"),
+                );
+                conflicted_files.push(conflicted_files_path);
+            });
         // clearing the index from the conflicted files
         conflicted_files.into_iter().for_each(|f| {
             // delete the conflicts in the old index and add the remaining files to the updated index
+            println!("its getting executed");
             merged_index
                 .conflict_remove(&f)
                 .expect("unable to remove the entry");
@@ -159,23 +169,23 @@ impl<'a> Measuments<'a> for Repo<'a> {
                 .expect("error in adding the remaining entries");
         });
 
+        self.print_index_contents(&index);
         (index, src_branch_commit.id(), ancestor.id())
     }
 
-    fn print_index_contents(&self, index: Index){
-        for entry in index.iter(){
-            let path=String::from_utf8(entry.path).expect("unable to find path");
-            if let Ok(obj)=self.repo.find_object(entry.id, None){
-                if let Some(blob)=obj.as_blob(){
-                    let content=String::from_utf8(blob.content().to_vec());
+    fn print_index_contents(&self, index: &Index) {
+        for entry in index.iter() {
+            let path = String::from_utf8(entry.path).expect("unable to find path");
+            if let Ok(obj) = self.repo.find_object(entry.id, None) {
+                if let Some(blob) = obj.as_blob() {
+                    let content = String::from_utf8(blob.content().to_vec())
+                        .expect("unable to fetch the content");
                     println!("{:?}", path);
                     println!("{:?}", content);
-                }
-                else{
+                } else {
                     println!("No content to display");
                 }
-            }
-            else {
+            } else {
                 println!("No object with that entry");
             }
         }

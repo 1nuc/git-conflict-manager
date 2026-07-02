@@ -26,12 +26,12 @@ pub trait Measuments <'a>{
     fn make_entry(
         &self,
         ancestor: IndexEntry,
-        base: IndexEntry,
+        base: &IndexEntry,
         parent_interference: bool,
     ) -> IndexEntry;
     fn apply_index_changes(&mut self, index: Index);
     fn find_ancesistor(&'a self) -> Result<Commit<'a>, Error>;
     fn perform_manual_commit(&mut self) -> bool;
     fn resolve_conflict_tree_level(&self) -> (Index, Oid, Oid);
-    fn print_index_contents(&self,index: Index);
+    fn print_index_contents(&self,index: &Index);
 }
