@@ -1,7 +1,7 @@
 use git2::{
     Commit, Error, Index, IndexConflict, IndexEntry, MergeOptions, Oid, build::CheckoutBuilder,
 };
-use std::{path::PathBuf, sync::Arc};
+use std::{path::PathBuf};
 
 use crate::{GitOps, Measuments, git_src::Repo};
 
@@ -115,7 +115,7 @@ impl<'a> Measuments<'a> for Repo<'a> {
 
         let ancestor_tree = ancestor.tree().unwrap();
 
-        let mut merged_options = MergeOptions::default();
+        let merged_options = MergeOptions::default();
         // let mut checkout_builder=CheckoutBuilder::default();
 
         // The below trees are conflicted
@@ -125,7 +125,7 @@ impl<'a> Measuments<'a> for Repo<'a> {
                 &ancestor_tree,
                 &src_branch_tree,
                 &other_branch_tree,
-                Some(merged_options.patience(true)),
+                Some(&merged_options),
             )
             .unwrap();
         let conflicts = merged_index
@@ -136,17 +136,15 @@ impl<'a> Measuments<'a> for Repo<'a> {
         let index_path = self.repo.path().join("index");
         let mut index = Index::open(index_path.as_path()).expect("unable to create an index");
         let mut conflicted_files = Vec::new();
-        let mut i: i32=0;
         conflicts
             .into_iter()
             .for_each(|conf: Result<IndexConflict, _>| {
-                i+=1;
                 let entry = conf.unwrap();
                 let ancestor = entry.ancestor.unwrap();
                 let base = entry.our.unwrap();
                 let theirs = entry.their.unwrap();
                 index
-                    .add(&self.make_entry(ancestor, &base, false))
+                    .add(&self.make_entry(ancestor, &base, true))
                     .expect("Error in resolving conflicted index entries");
                 let conflicted_files_path = PathBuf::from(
                     String::from_utf8(theirs.path).expect("unable to get the file path"),
@@ -156,7 +154,6 @@ impl<'a> Measuments<'a> for Repo<'a> {
         // clearing the index from the conflicted files
         conflicted_files.into_iter().for_each(|f| {
             // delete the conflicts in the old index and add the remaining files to the updated index
-            println!("its getting executed");
             merged_index
                 .conflict_remove(&f)
                 .expect("unable to remove the entry");
