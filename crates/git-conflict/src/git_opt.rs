@@ -160,9 +160,6 @@ impl<'a> Measuments<'a> for Repo<'a> {
                 .expect("unable to remove the entry");
         });
 
-        merged_index.iter().collect::<Vec<IndexEntry>>().into_iter().for_each(|x|{
-            println!("flags after resolving the conflict: {:?}", x.flags);
-        });
         // now adding the remaining entries to the index
         merged_index.iter().collect::<Vec<IndexEntry>>().into_iter().for_each(|x|{
             index
@@ -170,7 +167,6 @@ impl<'a> Measuments<'a> for Repo<'a> {
                 .expect("error in adding the remaining entries");
         });
 
-        self.print_index_contents(&index);
         (index, src_branch_commit.id(), ancestor.id())
     }
 

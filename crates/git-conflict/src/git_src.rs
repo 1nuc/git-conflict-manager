@@ -119,9 +119,6 @@ impl<'a> GitOps<'a> for Repo<'a> {
     //this function has an embedding implementation
     #[allow(unused_must_use)]
     fn commit(&mut self, parent_commits: &[Oid], msg: String) -> bool {
-        if self.index.has_conflicts(){
-            println!("yes it has conflicts");
-        }
         let tree = self
             .repo
             .find_tree(self.index.write_tree().unwrap())
