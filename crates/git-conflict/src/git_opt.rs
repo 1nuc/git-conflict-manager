@@ -8,14 +8,15 @@ use crate::{GitOps, Measuments, git_src::Repo};
 impl<'a> Measuments<'a> for Repo<'a> {
     fn make_entry(
         &self,
-        ancestor: IndexEntry,
+        ancestor: &IndexEntry,
         base: &IndexEntry,
         parent_interference: bool,
     ) -> IndexEntry {
         let index = match parent_interference {
-            true => &ancestor,
+            true => ancestor,
             false => base,
         };
+
         IndexEntry {
             ctime: index.ctime,
             mtime: index.mtime,
@@ -27,7 +28,7 @@ impl<'a> Measuments<'a> for Repo<'a> {
             uid: base.uid,
             gid: base.gid,
             file_size: base.file_size,
-            flags: index.flags,
+            flags: index.path.len() as u16,
             flags_extended: index.flags_extended,
         }
     }
@@ -39,7 +40,6 @@ impl<'a> Measuments<'a> for Repo<'a> {
             .set_index(&mut index)
             .expect("Unable to write the index to the repository"); //staging
         let mut checkout_builder = CheckoutBuilder::new();
-        // let mut index=self.repo.index().unwrap();
         self.repo
             .checkout_index(Some(&mut index), Some(checkout_builder.force()))
             .unwrap();
@@ -135,6 +135,7 @@ impl<'a> Measuments<'a> for Repo<'a> {
         // the above index is created but its not connected to a repostiroy
         let index_path = self.repo.path().join("index");
         let mut index = Index::open(index_path.as_path()).expect("unable to create an index");
+        index.clear().expect("unable to clear the index");
         let mut conflicted_files = Vec::new();
         conflicts
             .into_iter()
@@ -144,7 +145,7 @@ impl<'a> Measuments<'a> for Repo<'a> {
                 let base = entry.our.unwrap();
                 let theirs = entry.their.unwrap();
                 index
-                    .add(&self.make_entry(ancestor, &base, true))
+                    .add(&self.make_entry(&ancestor, &base, true))
                     .expect("Error in resolving conflicted index entries");
                 let conflicted_files_path = PathBuf::from(
                     String::from_utf8(theirs.path).expect("unable to get the file path"),
@@ -159,8 +160,11 @@ impl<'a> Measuments<'a> for Repo<'a> {
                 .expect("unable to remove the entry");
         });
 
+        merged_index.iter().collect::<Vec<IndexEntry>>().into_iter().for_each(|x|{
+            println!("flags after resolving the conflict: {:?}", x.flags);
+        });
         // now adding the remaining entries to the index
-        merged_index.iter().map(|x| {
+        merged_index.iter().collect::<Vec<IndexEntry>>().into_iter().for_each(|x|{
             index
                 .add(&x)
                 .expect("error in adding the remaining entries");

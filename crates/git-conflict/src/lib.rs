@@ -25,7 +25,7 @@ pub trait Initialize {
 pub trait Measuments <'a>{
     fn make_entry(
         &self,
-        ancestor: IndexEntry,
+        ancestor: &IndexEntry,
         base: &IndexEntry,
         parent_interference: bool,
     ) -> IndexEntry;
