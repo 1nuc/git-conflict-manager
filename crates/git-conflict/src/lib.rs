@@ -69,7 +69,7 @@ pub trait ManualControl: Actions{
     }
 }
 /// A trait that contains the necessary action required by all methodologies to resolve a conflict
-pub trait Actions {
+pub trait Actions{
     //Return the index
     fn branches(&self) -> Branches;
 

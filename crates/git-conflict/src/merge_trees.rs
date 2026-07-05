@@ -4,6 +4,9 @@ struct TreeVersion<'a>{
     tr: Repo<'a>,
 }
 
+impl TreeVersion <'a>{
+
+}
 
 impl<'a> Actions for TreeVersion<'a>{
     fn index(&self) -> std::cell::RefMut<git2::Index> {
