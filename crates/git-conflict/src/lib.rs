@@ -5,11 +5,9 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use git2::{
-    Commit, Error, Index, Oid, Repository, Signature, Status, StatusOptions, Time
-};
+use git2::{Commit, Error, Index, Oid, Repository, Signature, Status, StatusOptions, Time};
 
-use crate::{git_src::Branches};
+use crate::git_src::Branches;
 pub mod combine;
 pub mod discarding;
 pub mod git_src;
@@ -27,11 +25,11 @@ pub trait Initialize {
     fn return_path() -> PathBuf;
     fn return_repo(file_path: PathBuf) -> Option<Repository>;
 }
-pub trait Utils{
+pub trait Utils {
     fn find_ancesistor(&self, other_branch: &str) -> Result<Oid, Error>;
 }
 
-pub trait ManualControl: Actions{
+pub trait ManualControl: Actions {
     fn perform_manual_commit(&mut self, overwrite: bool) -> bool {
         let msg = format!(
             "Resolve Conflict: Merge {} branch into {} branch",
@@ -57,17 +55,20 @@ pub trait ManualControl: Actions{
         // retreive the commits of "theirs" branch
 
         //ancestor commit
-        let ancestor=self.repo().find_ancesistor(&self.branches().dest_branch).expect("unable to find the ancestor oid");
-        let parent_commits=match overwrite{
-            true =>&[ancestor],
-            false =>&[ours_parents_commits, theirs_parents_commits],
-        };
+        let ancestor = self
+            .repo()
+            .find_ancesistor(&self.branches().dest_branch)
+            .expect("unable to find the ancestor oid");
 
+        let parent_commits: &[Oid] = match overwrite {
+            true => &[ancestor],
+            false => &[ours_parents_commits, theirs_parents_commits],
+        };
         self.commit(parent_commits, msg)
     }
 }
 /// A trait that contains the necessary action required by all methodologies to resolve a conflict
-pub trait Actions{
+pub trait Actions {
     //Return the index
     fn branches(&self) -> Branches;
 

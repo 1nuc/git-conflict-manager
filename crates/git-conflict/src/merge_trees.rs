@@ -1,14 +1,12 @@
+use crate::{Actions, Utils, git_src::Repo};
+use git2::{Index, IndexConflict, IndexEntry, MergeOptions, Oid, build::CheckoutBuilder};
 use std::path::PathBuf;
-use git2::{
-    Index, IndexConflict, IndexEntry, MergeOptions, Oid, build::CheckoutBuilder};
-use crate::{Utils, Actions, git_src::Repo};
 
-struct TreeVersion<'a>{
+pub struct TreeVersion<'a> {
     tr: Repo<'a>,
 }
 
-impl<'a> TreeVersion <'a>{
-
+impl<'a> TreeVersion<'a> {
     pub fn merge_trees(&mut self) {
         let (index, src_commit, ancestor) = self.resolve_conflict_tree_level();
 
@@ -22,7 +20,7 @@ impl<'a> TreeVersion <'a>{
         // Apply the index changes to the repository
         self.apply_index_changes(index);
 
-        // TODO: Fix the commit call function 
+        // TODO: Fix the commit call function
         match self.commit(parent_commits, msg) {
             true => println!("conflict is resolved"),
             false => panic!("error resolving the conflict"),
@@ -59,11 +57,17 @@ impl<'a> TreeVersion <'a>{
         index
             .write()
             .expect("Error in writing the index back to the tree");
-        self.tr.repo.0.borrow_mut()
+        self.tr
+            .repo
+            .0
+            .borrow_mut()
             .set_index(&mut index)
             .expect("Unable to write the index to the repository"); //staging
         let mut checkout_builder = CheckoutBuilder::new();
-        self.tr.repo.0.borrow_mut()
+        self.tr
+            .repo
+            .0
+            .borrow_mut()
             .checkout_index(Some(&mut index), Some(checkout_builder.force()))
             .unwrap();
         *self.tr.index.0.borrow_mut() = index;
@@ -71,47 +75,8 @@ impl<'a> TreeVersion <'a>{
 
     #[allow(unused_must_use)]
     fn resolve_conflict_tree_level(&self) -> (Index, Oid, Oid) {
-        let repo=self.tr.repo.0.borrow();
-        let src_branch = repo.head().expect("unable to get the head");
-
-        let src_branch_commit = src_branch
-            .peel_to_commit()
-            .expect("unable to fetch the commit");
-        let src_branch_tree = src_branch_commit.tree().expect("unable to fetch the tree");
-
-        let other_branch = 
-            repo
-            .find_branch(&self.tr.branches.dest_branch, git2::BranchType::Local)
-            .expect("unable to fetch other branch")
-            .into_reference();
-
-        let other_branch_tree = other_branch
-            .peel_to_commit()
-            .expect("unable to fetch the commit in the dest branch")
-            .tree()
-            .expect("unable to fetch the tree in the dest branch");
-
-        let ancestor = repo.find_commit(
-            repo
-            .find_ancesistor(&self.tr.branches.dest_branch)
-            .expect("There is no common parent between those commits")
-            ).expect("Unable to find the commit");
-
-        let ancestor_tree = ancestor.tree().unwrap();
-
-        let merged_options = MergeOptions::default();
-        // let mut checkout_builder=CheckoutBuilder::default();
-
-        // The below trees are conflicted
-        let mut merged_index =
-            repo
-            .merge_trees(
-                &ancestor_tree,
-                &src_branch_tree,
-                &other_branch_tree,
-                Some(&merged_options),
-            )
-            .unwrap();
+        let (mut merged_index, src_branch_commit, ancestor) = self.merging_index();
+        let repo = self.tr.repo.0.borrow();
         let conflicts = merged_index
             .conflicts()
             .unwrap()
@@ -145,17 +110,66 @@ impl<'a> TreeVersion <'a>{
         });
 
         // now adding the remaining entries to the index
-        merged_index.iter().collect::<Vec<IndexEntry>>().into_iter().for_each(|x|{
-            index
-                .add(&x)
-                .expect("error in adding the remaining entries");
-        });
+        merged_index
+            .iter()
+            .collect::<Vec<IndexEntry>>()
+            .into_iter()
+            .for_each(|x| {
+                index
+                    .add(&x)
+                    .expect("error in adding the remaining entries");
+            });
 
-        (index, src_branch_commit.id(), ancestor.id())
+        (index, src_branch_commit, ancestor)
+    }
+
+    fn merging_index(&self) -> (Index, Oid, Oid) {
+        let repo = self.tr.repo.0.borrow();
+        let src_branch = repo.head().expect("unable to get the head");
+
+        let src_branch_commit = src_branch
+            .peel_to_commit()
+            .expect("unable to fetch the commit");
+        let src_branch_tree = src_branch_commit.tree().expect("unable to fetch the tree");
+
+        let other_branch = repo
+            .find_branch(&self.tr.branches.dest_branch, git2::BranchType::Local)
+            .expect("unable to fetch other branch")
+            .into_reference();
+
+        let other_branch_tree = other_branch
+            .peel_to_commit()
+            .expect("unable to fetch the commit in the dest branch")
+            .tree()
+            .expect("unable to fetch the tree in the dest branch");
+
+        let ancestor = repo
+            .find_commit(
+                repo.find_ancesistor(&self.tr.branches.dest_branch)
+                    .expect("There is no common parent between those commits"),
+            )
+            .expect("Unable to find the commit");
+
+        let ancestor_tree = ancestor.tree().unwrap();
+
+        let merged_options = MergeOptions::default();
+        // let mut checkout_builder=CheckoutBuilder::default();
+
+        // The below trees are conflicted
+        let merged_index = repo
+            .merge_trees(
+                &ancestor_tree,
+                &src_branch_tree,
+                &other_branch_tree,
+                Some(&merged_options),
+            )
+            .expect("Error in merging the index");
+
+        (merged_index, src_branch_commit.id(), ancestor.id())
     }
 }
 
-impl<'a> Actions for TreeVersion<'a>{
+impl<'a> Actions for TreeVersion<'a> {
     fn index(&self) -> std::cell::RefMut<git2::Index> {
         self.tr.index.0.borrow_mut()
     }

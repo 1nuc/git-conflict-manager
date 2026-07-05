@@ -1,6 +1,6 @@
 use crate::{Initialize, utils::{NucCheckoutBuilder, NucIndex, NucRepository}};
 use git2::{
-    Error, Oid, Repository, build::CheckoutBuilder
+    Repository, build::CheckoutBuilder
 };
 use std::{
     cell::RefCell, env, path::{PathBuf}, rc::Rc,
@@ -81,7 +81,5 @@ impl<'a> Initialize for Repo<'a> {
         }
     }
 
-    /// find the ancestor commits and trees
-    /// This function returns the ancestor OID that is required to fetch the commit and tree
 }
 
