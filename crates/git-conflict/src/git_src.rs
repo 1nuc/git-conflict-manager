@@ -1,14 +1,13 @@
-use crate::{GitOps, Initialize, Measuments};
+use crate::{GitOps, Initialize, Measuments, utils::{NucCheckoutBuilder, NucIndex, NucRepository}};
 use git2::{
     Commit, Index, Oid, Repository, Signature, Status, StatusOptions, Time, build::CheckoutBuilder,
 };
 use std::{
-    env, fs,
-    path::{Path, PathBuf},
-    time::{SystemTime, UNIX_EPOCH},
+    cell::RefCell, env, fs, path::{Path, PathBuf}, rc::Rc, time::{SystemTime, UNIX_EPOCH}
 };
 
 //define the base struct to obtain the branches naming
+#[derive(Clone)]
 pub struct Branches {
     pub src_branch: String,
     pub dest_branch: String,
@@ -24,12 +23,13 @@ impl Branches {
 }
 //creating a struct that contains the essential details for a branch
 #[allow(dead_code)]
+#[derive(Clone)]
 pub struct Repo<'a> {
     pub path: PathBuf,
-    pub repo: Repository,
-    pub index: Index, //this is the where the index of the files getting updated
+    pub repo: NucRepository,
+    pub index: NucIndex, //this is the where the index of the files getting updated
     pub branches: Branches,
-    pub builder: CheckoutBuilder<'a>,
+    pub builder: NucCheckoutBuilder<'a>,
 }
 
 #[allow(non_snake_case)]
@@ -37,19 +37,25 @@ impl<'a> Initialize for Repo<'a> {
     //init
     fn init(branch_1: String, branch_2: String) -> Self {
         let file_path = Self::return_path();
-        let Repo = Self::return_repo(file_path).expect("unable to find a git repository");
-        let repo_path = Repo
+        let repo = NucRepository(Rc::new(RefCell::new(Self::return_repo(file_path).expect("unable to find a git repository"))));
+        // let Repo = Self::return_repo(file_path).expect("unable to find a git repository");
+        let path= repo.0.borrow()
             .workdir()
             .expect("unable to find the repository path")
             .to_path_buf();
-        let Index = Repo.index().expect("unable to find the index");
+        let index = NucIndex(Rc::new(RefCell::new(repo.0.borrow().index().expect("unable to find the index"))));
         //prepare the details needed to perform git operations
+        let builder= NucCheckoutBuilder(Rc::new(RefCell::new(CheckoutBuilder::new())));
+
+        let branches= Branches::init(branch_1, branch_2);
+
         Self {
-            path: repo_path,
-            repo: Repo,
-            index: Index,
-            branches: Branches::init(branch_1, branch_2),
-            builder: CheckoutBuilder::new(),
+            path,
+            repo,
+            index,
+            branches,
+            builder,
+
         }
     }
 
@@ -81,6 +87,7 @@ impl<'a> GitOps<'a> for Repo<'a> {
 
     /// If you want to have the cimmits of both branches run this function
     #[allow(unused_must_use)]
+    #[allow(unused_variables)]
     fn merge_trees(&mut self) {
         let (index, src_commit, ancestor) = self.resolve_conflict_tree_level();
 
@@ -94,16 +101,17 @@ impl<'a> GitOps<'a> for Repo<'a> {
         // Apply the index changes to the repository
         self.apply_index_changes(index);
 
-        match self.commit(parent_commits, msg) {
-            true => println!("conflict is resolved"),
-            false => panic!("error resolving the conflict"),
-        }
+        // TODO: Fix the commit call function 
+        // match self.repo.0.borrow().commit(parent_commits, msg) {
+        //     true => println!("conflict is resolved"),
+        //     false => panic!("error resolving the conflict"),
+        // }
     }
 
     // The checkout is the first step towards changing the index
     fn checkout_version(&mut self, ours: bool) -> &mut Self {
         let head_branch = self
-            .repo
+            .repo.0.borrow()
             .head()
             .expect("unable to return the reference")
             .shorthand()
@@ -114,8 +122,8 @@ impl<'a> GitOps<'a> for Repo<'a> {
             panic!("head is not pointing to any branch");
         } else {
             match ours {
-                true => self.builder.use_ours(true),
-                false => self.builder.use_theirs(true),
+                true => self.builder.0.borrow_mut().use_ours(true),
+                false => self.builder.0.borrow_mut().use_theirs(true),
             };
         }
         self

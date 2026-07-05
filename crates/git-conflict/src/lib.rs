@@ -1,10 +1,10 @@
 use std::{
-    fs::remove_file,
-    path::{Path, PathBuf},
-    time::{SystemTime, UNIX_EPOCH},
+    cell::RefMut, fs::remove_file, path::{Path, PathBuf}, time::{SystemTime, UNIX_EPOCH}
 };
 
 use git2::{Commit, Error, Index, IndexEntry, Oid, Repository, Signature, Status, StatusOptions, Time};
+
+use crate::utils::{NucIndex, NucRepository};
 pub mod combine;
 pub mod discarding;
 pub mod utils;
@@ -40,10 +40,10 @@ pub trait Measuments<'a> {
 pub trait Actions{
 
     //Return the index
-    fn index(&self) -> Index;
+    fn index(&self) -> RefMut<Index>;
 
     //Return the repo
-    fn repo(&self) -> Repository;
+    fn repo(&self) -> RefMut<Repository>;
 
     //staging changes
     //this function has an embedding implementation

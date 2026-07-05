@@ -32,6 +32,14 @@ impl Clone for NucRepository{
     }
 }
 
+///wrapper for the CheckoutBuilder of the lib git crate
+pub struct NucCheckoutBuilder<'a>(pub Rc<RefCell<CheckoutBuilder<'a>>>);
+
+impl <'a>Clone for NucCheckoutBuilder<'a>{
+    fn clone(&self) -> Self {
+        Self(Rc::clone(&self.0))
+    }
+}
 
 impl<'a> Measuments<'a> for Repo<'a> {
     fn make_entry(

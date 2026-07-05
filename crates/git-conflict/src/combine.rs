@@ -1,8 +1,9 @@
-use crate::{Actions, Status, git_src::Repo};
-use std::fs;
+use git2::{Index, Repository};
+
+use crate::{Actions, Status, git_src::Repo, utils::{NucIndex, NucRepository}};
+use std::{cell::{Ref, RefMut}, fs};
 
 /// This struct specifies the methodology for merging both head and theirs versions
-#[derive(Clone, Copy)]
 struct CmVersion<'a>{
     repo: Repo<'a>,
 }
@@ -74,10 +75,10 @@ impl<'a> CmVersion<'a>{
     }
 }
 impl<'a> Actions for CmVersion<'a>{
-    fn index(&self) -> git2::Index {
-        self.repo.index
+    fn index(&self) -> RefMut<Index>{
+        self.repo.index.0.borrow_mut()
     }
-    fn repo(&self) -> git2::Repository{
-        self.repo.repo
+    fn repo(&self) -> RefMut<Repository>{
+        self.repo.repo.0.borrow_mut()
     }
 }
