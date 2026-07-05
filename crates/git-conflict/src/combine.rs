@@ -1,8 +1,7 @@
 use git2::{Index, Repository};
 
 use crate::{
-    Actions, Status,
-    git_src::{Branches, Repo},
+    Actions, ManualControl, Status, git_src::{Branches, Repo}
 };
 use std::{
     cell::{RefMut},
@@ -11,21 +10,10 @@ use std::{
 
 /// This struct specifies the methodology for merging both head and theirs versions
 struct CmVersion<'a> {
-    repo: Repo<'a>,
+    cm: Repo<'a>,
 }
 
 impl<'a> CmVersion<'a> {
-    //resolves the conflict between two branches by combining the changes of both branches
-    fn resolve_conflict_by_combining(&mut self) {
-        let files = self.merge_files();
-        self.staging(files); //stage the changes
-        match self.perform_manual_commit() {
-            //commit the changes
-            true => println!("conflict is resolved"),
-            false => panic!("error resolving the conflict"),
-        }
-    }
-
     fn remove_conflict_markers(&self, file_name: String) {
         let file_path = fs::read_to_string(&file_name).unwrap();
         let modify_content = file_path
@@ -57,12 +45,13 @@ impl<'a> CmVersion<'a> {
 }
 impl<'a> Actions for CmVersion<'a> {
     fn index(&self) -> RefMut<Index> {
-        self.repo.index.0.borrow_mut()
+        self.cm.index.0.borrow_mut()
     }
     fn repo(&self) -> RefMut<Repository> {
-        self.repo.repo.0.borrow_mut()
+        self.cm.repo.0.borrow_mut()
     }
     fn branches(&self) -> Branches{
-        self.repo.branches.clone()
+        self.cm.branches.clone()
     }
 }
+impl <'a>ManualControl for CmVersion<'a>{}

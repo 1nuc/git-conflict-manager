@@ -40,7 +40,7 @@ pub trait Measuments<'a> {
     fn print_index_contents(&self, index: &Index);
 }
 
-pub trait ManualControl: Actions {
+pub trait ManualControl: Actions{
     fn perform_manual_commit(&mut self) -> bool {
         let msg = format!(
             "Resolve Conflict: Merge {} branch into {} branch",
