@@ -49,7 +49,7 @@ impl<'a> TreeVersion <'a>{
     }
 
     /// find the ancestor commits and trees
-    fn find_ancesistor(&'a self) -> Result<Commit<'a>, Error> {
+    fn find_ancesistor(& self) -> Result<Oid, Error> {
         let repo=self.tr.repo.0.borrow();
         let head_commits = repo.head().unwrap().peel_to_commit().unwrap();
         let other_branch_commits =repo
@@ -60,10 +60,8 @@ impl<'a> TreeVersion <'a>{
             .expect("unable to fetch the commit");
         let oid = self
             .tr.repo.0.borrow()
-            .merge_base(head_commits.id(), other_branch_commits.id())
-            .unwrap();
-        let repo=self.tr.repo.0.clone().into_inner();
-        .find_commit(oid)
+            .merge_base(head_commits.id(), other_branch_commits.id());
+        oid
     }
 
     #[allow(unused_must_use)]
@@ -88,9 +86,11 @@ impl<'a> TreeVersion <'a>{
             .tree()
             .expect("unable to fetch the tree in the dest branch");
 
-        let ancestor = self
+        let ancestor = repo.find_commit(
+            self
             .find_ancesistor()
-            .expect("There is no common parent between those commits");
+            .expect("There is no common parent between those commits")
+            ).expect("Unable to find the commit");
 
         let ancestor_tree = ancestor.tree().unwrap();
 
