@@ -2,6 +2,7 @@ use crate::{Actions, Status, git_src::Repo};
 use std::fs;
 
 /// This struct specifies the methodology for merging both head and theirs versions
+#[derive(Clone, Copy)]
 struct CmVersion<'a>{
     repo: Repo<'a>,
 }

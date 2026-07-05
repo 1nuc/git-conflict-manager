@@ -1,9 +1,37 @@
+//!Define wrapper utils for efficient operation
+//! This module defines the utility functions required to ensure the smoothness of conflict
+//! resolution operation, for example the Index and Repository struct in lib git2 crate does not
+//! implement the Copy and Clone traits. Those Traits are necessary to share the parameters across
+//! different functions. Being able to mutually mutate the Index and Repository enables efficient
+//! operation and avoid redundant code. Another major factor is the fact that those structs are
+//! extensivly used, so the usage of Reference counter is necessary that provides mutliple versions
+//! of one share instance in the memory, when combined with the ref cell, it allows for mutual
+//! mutation. 
 use git2::{
-    Commit, Error, Index, IndexConflict, IndexEntry, MergeOptions, Oid, build::CheckoutBuilder,
+    Commit, Error, Index, IndexConflict, IndexEntry, MergeOptions, Oid, Repository, build::CheckoutBuilder
 };
-use std::{path::PathBuf};
+use std::{cell::RefCell, path::PathBuf, rc::Rc};
 
-use crate::{GitOps, Measuments, git_src::Repo};
+use crate::{Measuments, git_src::Repo};
+
+///wrapper for the Index of the lib git crate
+pub struct NucIndex(pub Rc<RefCell<Index>>);
+
+impl Clone for NucIndex{
+    fn clone(&self) -> Self {
+        Self(Rc::clone(&self.0))
+    }
+}
+
+///wrapper for the Repository of the lib git crate
+pub struct NucRepository(pub Rc<RefCell<Repository>>);
+
+impl Clone for NucRepository{
+    fn clone(&self) -> Self {
+        Self(Rc::clone(&self.0))
+    }
+}
+
 
 impl<'a> Measuments<'a> for Repo<'a> {
     fn make_entry(
@@ -44,31 +72,6 @@ impl<'a> Measuments<'a> for Repo<'a> {
             .checkout_index(Some(&mut index), Some(checkout_builder.force()))
             .unwrap();
         self.index = index;
-    }
-    fn perform_manual_commit(&mut self) -> bool {
-        let msg = format!(
-            "Resolve Conflict: Merge {} branch into {} branch",
-            self.branches.src_branch, self.branches.dest_branch
-        );
-        // get the heads commits
-        // retreive the commits of "ours" branch and theres
-        let ours_parents_commits = self
-            .repo
-            .head()
-            .expect("unable to find the head branch")
-            .peel_to_commit()
-            .expect("error peeling to commit in ours version")
-            .id();
-        let theirs_parents_commits = self
-            .repo
-            .find_reference("MERGE_HEAD")
-            .expect("unable to find the second theirs reference")
-            .peel_to_commit()
-            .expect("error in peeling to a commit in theirs version")
-            .id();
-        // // retreive the commits of "theirs" branch
-        let parent_commits = &[ours_parents_commits, theirs_parents_commits];
-        self.commit(parent_commits, msg)
     }
 
     /// find the ancestor commits and trees

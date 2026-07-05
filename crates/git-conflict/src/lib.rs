@@ -7,7 +7,7 @@ use std::{
 use git2::{Commit, Error, Index, IndexEntry, Oid, Repository, Signature, Status, StatusOptions, Time};
 pub mod combine;
 pub mod discarding;
-pub mod git_opt;
+pub mod utils;
 pub mod git_src;
 pub mod merge_trees;
 
