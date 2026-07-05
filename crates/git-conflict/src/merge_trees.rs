@@ -1,6 +1,6 @@
 use crate::{Actions, Utils, git_src::Repo};
-use git2::{Index, IndexConflict, IndexEntry, MergeOptions, Oid, build::CheckoutBuilder};
-use std::path::{Path, PathBuf};
+use git2::{Index, IndexConflict, IndexEntry, MergeOptions, Oid, Repository, build::CheckoutBuilder};
+use std::path::{PathBuf};
 
 pub struct TreeVersion<'a> {
     tr: Repo<'a>,
@@ -202,11 +202,11 @@ impl<'a> TreeVersion<'a> {
 }
 
 impl<'a> Actions for TreeVersion<'a> {
-    fn index(&self) -> std::cell::RefMut<git2::Index> {
+    fn index(&self) -> std::cell::RefMut<'_,Index> {
         self.tr.index.0.borrow_mut()
     }
 
-    fn repo(&self) -> std::cell::RefMut<git2::Repository> {
+    fn repo(&self) -> std::cell::RefMut<'_,Repository> {
         self.tr.repo.0.borrow_mut()
     }
 

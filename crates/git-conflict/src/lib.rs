@@ -72,10 +72,10 @@ pub trait Actions {
     //Return the index
     fn branches(&self) -> Branches;
 
-    fn index(&self) -> RefMut<Index>;
+    fn index(&self) -> RefMut<'_,Index>;
 
     //Return the repo
-    fn repo(&self) -> RefMut<Repository>;
+    fn repo(&self) -> RefMut<'_,Repository>;
 
     //staging changes
     //this function has an embedding implementation

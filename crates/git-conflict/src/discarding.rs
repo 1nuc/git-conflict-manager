@@ -83,11 +83,11 @@ impl<'a> DsVersion<'a> {
     }
 }
 impl<'a> Actions for DsVersion<'a> {
-    fn index(&self) -> RefMut<Index> {
+    fn index(&self) -> RefMut<'_,Index> {
         self.ds.index.0.borrow_mut()
     }
 
-    fn repo(&self) -> RefMut<Repository> {
+    fn repo(&self) -> RefMut<'_,Repository> {
         self.ds.repo.0.borrow_mut()
     }
 

@@ -57,10 +57,10 @@ impl<'a> CmVersion<'a> {
     }
 }
 impl<'a> Actions for CmVersion<'a> {
-    fn index(&self) -> RefMut<Index> {
+    fn index(&self) -> RefMut<'_,Index> {
         self.cm.index.0.borrow_mut()
     }
-    fn repo(&self) -> RefMut<Repository> {
+    fn repo(&self) -> RefMut<'_,Repository> {
         self.cm.repo.0.borrow_mut()
     }
     fn branches(&self) -> Branches {
