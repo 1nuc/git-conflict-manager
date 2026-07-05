@@ -1,14 +1,20 @@
 use git2::{Index, Repository};
 
-use crate::{Actions, Status, git_src::Repo, utils::{NucIndex, NucRepository}};
-use std::{cell::{Ref, RefMut}, fs};
+use crate::{
+    Actions, Status,
+    git_src::Repo,
+};
+use std::{
+    cell::{RefMut},
+    fs,
+};
 
 /// This struct specifies the methodology for merging both head and theirs versions
-struct CmVersion<'a>{
+struct CmVersion<'a> {
     repo: Repo<'a>,
 }
 
-impl<'a> CmVersion<'a>{
+impl<'a> CmVersion<'a> {
     //resolves the conflict between two branches by combining the changes of both branches
     fn resolve_conflict_by_combining(&mut self) {
         let files = self.merge_files();
@@ -55,15 +61,21 @@ impl<'a> CmVersion<'a>{
         );
         // get the heads commits
         // retreive the commits of "ours" branch and theres
-        let ours_parents_commits = self.repo
+        let ours_parents_commits = self
             .repo
+            .repo
+            .0
+            .borrow()
             .head()
             .expect("unable to find the head branch")
             .peel_to_commit()
             .expect("error peeling to commit in ours version")
             .id();
-        let theirs_parents_commits = self.repo
+        let theirs_parents_commits = self
             .repo
+            .repo
+            .0
+            .borrow()
             .find_reference("MERGE_HEAD")
             .expect("unable to find the second theirs reference")
             .peel_to_commit()
@@ -74,11 +86,11 @@ impl<'a> CmVersion<'a>{
         self.commit(parent_commits, msg)
     }
 }
-impl<'a> Actions for CmVersion<'a>{
-    fn index(&self) -> RefMut<Index>{
+impl<'a> Actions for CmVersion<'a> {
+    fn index(&self) -> RefMut<Index> {
         self.repo.index.0.borrow_mut()
     }
-    fn repo(&self) -> RefMut<Repository>{
+    fn repo(&self) -> RefMut<Repository> {
         self.repo.repo.0.borrow_mut()
     }
 }
