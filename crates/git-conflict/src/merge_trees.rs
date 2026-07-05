@@ -69,21 +69,6 @@ impl<'a> TreeVersion <'a>{
         *self.tr.index.0.borrow_mut() = index;
     }
 
-    /// find the ancestor commits and trees
-    fn find_ancesistor(& self) -> Result<Oid, Error> {
-        let repo=self.tr.repo.0.borrow();
-        let head_commits = repo.head().unwrap().peel_to_commit().unwrap();
-        let other_branch_commits =repo
-            .find_branch(&self.tr.branches.dest_branch, git2::BranchType::Local)
-            .unwrap()
-            .into_reference()
-            .peel_to_commit()
-            .expect("unable to fetch the commit");
-         self
-            .tr.repo.0.borrow()
-            .merge_base(head_commits.id(), other_branch_commits.id())
-    }
-
     #[allow(unused_must_use)]
     fn resolve_conflict_tree_level(&self) -> (Index, Oid, Oid) {
         let repo=self.tr.repo.0.borrow();
@@ -107,8 +92,8 @@ impl<'a> TreeVersion <'a>{
             .expect("unable to fetch the tree in the dest branch");
 
         let ancestor = repo.find_commit(
-            self
-            .find_ancesistor()
+            self.tr.repo
+            .find_ancesistor(&self.tr.branches.dest_branch)
             .expect("There is no common parent between those commits")
             ).expect("Unable to find the commit");
 

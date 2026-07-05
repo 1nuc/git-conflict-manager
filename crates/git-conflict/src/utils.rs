@@ -7,7 +7,7 @@
 //! extensivly used, so the usage of Reference counter is necessary that provides mutliple versions
 //! of one share instance in the memory, when combined with the ref cell, it allows for mutual
 //! mutation.
-use git2::{Branch, Error, Index, Oid, Repository, build::CheckoutBuilder};
+use git2::{Error, Index, Oid, Repository, build::CheckoutBuilder};
 use std::{cell::RefCell, rc::Rc};
 
 ///wrapper for the Index of the lib git crate
@@ -48,7 +48,7 @@ impl NucRepository {
     }
 
     /// find the ancestor commits and trees
-    fn find_ancesistor(&self, other_branch: &str) -> Result<Oid, Error> {
+    pub fn find_ancesistor(&self, other_branch: &str) -> Result<Oid, Error> {
         let repo=self.0.borrow();
         let head_commits = repo.head().unwrap().peel_to_commit().unwrap();
         let other_branch_commits =repo
