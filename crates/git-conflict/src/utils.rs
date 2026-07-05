@@ -59,6 +59,8 @@ impl<'a> Clone for NucCheckoutBuilder<'a> {
 }
 impl Utils for Repository{
 
+    /// find the ancestor commits and trees
+    /// This function returns the ancestor OID that is required to fetch the commit and tree
     fn find_ancesistor(&self, other_branch: &str) -> Result<Oid, Error> {
         let head_commits = self.head().unwrap().peel_to_commit().unwrap();
         let other_branch_commits =self
