@@ -1,12 +1,22 @@
 use crate::{Actions, Utils, git_src::Repo};
 use git2::{Index, IndexConflict, IndexEntry, MergeOptions, Oid, build::CheckoutBuilder};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub struct TreeVersion<'a> {
     tr: Repo<'a>,
+    ours: bool,
+    parent_interference: bool,
 }
 
 impl<'a> TreeVersion<'a> {
+    pub fn new(repo: Repo<'a>, ours: bool, parent_interference: bool) -> Self {
+        Self {
+            tr: repo,
+            ours,
+            parent_interference,
+        }
+    }
+
     pub fn merge_trees(&mut self) {
         let (index, src_commit, ancestor) = self.resolve_conflict_tree_level();
 
@@ -53,6 +63,29 @@ impl<'a> TreeVersion<'a> {
             flags_extended: index.flags_extended,
         }
     }
+
+    fn build_entry(
+        &self,
+        ours: &IndexEntry,
+        theirs: &IndexEntry,
+        ancestor: &IndexEntry,
+    ) -> (IndexEntry, String) {
+        let entry = match self.ours {
+            true => self.make_entry(ancestor, ours, self.parent_interference),
+            false => self.make_entry(ancestor, theirs, self.parent_interference),
+        };
+
+        let path =
+            match self.ours {
+                true => String::from_utf8(theirs.path.clone())
+                    .expect("Unable to get the path from the vec"),
+                false => String::from_utf8(ours.path.clone())
+                    .expect("Unable to get the path from the vec"),
+            };
+
+        (entry, path)
+    }
+
     fn apply_index_changes(&mut self, mut index: Index) {
         index
             .write()
@@ -93,12 +126,11 @@ impl<'a> TreeVersion<'a> {
                 let ancestor = entry.ancestor.unwrap();
                 let base = entry.our.unwrap();
                 let theirs = entry.their.unwrap();
+                let (entry, path) = &self.build_entry(&base, &theirs, &ancestor);
                 index
-                    .add(&self.make_entry(&ancestor, &base, true))
+                    .add(entry)
                     .expect("Error in resolving conflicted index entries");
-                let conflicted_files_path = PathBuf::from(
-                    String::from_utf8(theirs.path).expect("unable to get the file path"),
-                );
+                let conflicted_files_path = PathBuf::from(path);
                 conflicted_files.push(conflicted_files_path);
             });
         // clearing the index from the conflicted files
