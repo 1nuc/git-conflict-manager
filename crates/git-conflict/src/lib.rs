@@ -6,10 +6,10 @@ use std::{
 };
 
 use git2::{
-    Commit, Error, Index, IndexEntry, Oid, Repository, Signature, Status, StatusOptions, Time,
+    Commit, Index, Oid, Repository, Signature, Status, StatusOptions, Time,
 };
 
-use crate::{git_src::Branches, utils::{NucIndex, NucRepository}};
+use crate::{git_src::Branches};
 pub mod combine;
 pub mod discarding;
 pub mod git_src;
@@ -26,18 +26,6 @@ pub trait Initialize {
     fn init(branch_1: String, branch_2: String) -> Self;
     fn return_path() -> PathBuf;
     fn return_repo(file_path: PathBuf) -> Option<Repository>;
-}
-pub trait Measuments<'a> {
-    fn make_entry(
-        &self,
-        ancestor: &IndexEntry,
-        base: &IndexEntry,
-        parent_interference: bool,
-    ) -> IndexEntry;
-    fn apply_index_changes(&mut self, index: Index);
-    fn find_ancesistor(&'a self) -> Result<Commit<'a>, Error>;
-    fn resolve_conflict_tree_level(&self) -> (Index, Oid, Oid);
-    fn print_index_contents(&self, index: &Index);
 }
 
 pub trait ManualControl: Actions{
