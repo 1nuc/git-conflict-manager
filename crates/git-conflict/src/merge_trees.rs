@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use git2::{
-    Error, Index, IndexConflict, IndexEntry, MergeOptions, Oid, build::CheckoutBuilder};
-use crate::{Actions, git_src::Repo};
+    Index, IndexConflict, IndexEntry, MergeOptions, Oid, build::CheckoutBuilder};
+use crate::{Utils, Actions, git_src::Repo};
 
 struct TreeVersion<'a>{
     tr: Repo<'a>,
@@ -92,7 +92,7 @@ impl<'a> TreeVersion <'a>{
             .expect("unable to fetch the tree in the dest branch");
 
         let ancestor = repo.find_commit(
-            self.tr.repo
+            repo
             .find_ancesistor(&self.tr.branches.dest_branch)
             .expect("There is no common parent between those commits")
             ).expect("Unable to find the commit");

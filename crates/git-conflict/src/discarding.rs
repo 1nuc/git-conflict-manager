@@ -62,7 +62,7 @@ impl<'a> DsVersion<'a> {
     }
 
     //resolves the conflict between two branches by discarding the changes of either two branches
-    pub fn resolve_conflict_by_discarding(&mut self) {
+    pub fn resolve_conflict_by_discarding(&mut self, overwrite: bool) {
         let files = self.checkout_files();
         let self_cloned = self.clone(); //must copy as mut
         let mut index = self_cloned.ds.index.0.borrow_mut(); // take the value as mut
@@ -75,7 +75,7 @@ impl<'a> DsVersion<'a> {
             .borrow_mut()
             .checkout_index(Some(&mut *index), Some(&mut *builder)); //revert back the index to match the index to the checkout builder
         self.staging(files); //stage the changes
-        match self.perform_manual_commit() {
+        match self.perform_manual_commit(overwrite) {
             //commit the changes
             true => println!("conflict is resolved"),
             false => panic!("error resolving the conflict"),

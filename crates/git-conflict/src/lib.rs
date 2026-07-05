@@ -6,7 +6,7 @@ use std::{
 };
 
 use git2::{
-    Commit, Index, Oid, Repository, Signature, Status, StatusOptions, Time,
+    Commit, Error, Index, Oid, Repository, Signature, Status, StatusOptions, Time
 };
 
 use crate::{git_src::Branches};
@@ -26,6 +26,9 @@ pub trait Initialize {
     fn init(branch_1: String, branch_2: String) -> Self;
     fn return_path() -> PathBuf;
     fn return_repo(file_path: PathBuf) -> Option<Repository>;
+}
+pub trait Utils{
+    fn find_ancesistor(&self, other_branch: &str) -> Result<Oid, Error>;
 }
 
 pub trait ManualControl: Actions{
@@ -51,12 +54,15 @@ pub trait ManualControl: Actions{
             .peel_to_commit()
             .expect("error in peeling to a commit in theirs version")
             .id();
-        // // retreive the commits of "theirs" branch
+        // retreive the commits of "theirs" branch
+
+        //ancestor commit
+        let ancestor=self.repo().find_ancesistor(&self.branches().dest_branch).expect("unable to find the ancestor oid");
         let parent_commits=match overwrite{
-            true =>,
+            true =>&[ancestor],
             false =>&[ours_parents_commits, theirs_parents_commits],
         };
-        // let parent_commits = 
+
         self.commit(parent_commits, msg)
     }
 }

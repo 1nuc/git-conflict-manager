@@ -10,6 +10,8 @@
 use git2::{Error, Index, Oid, Repository, build::CheckoutBuilder};
 use std::{cell::RefCell, rc::Rc};
 
+use crate::Utils;
+
 ///wrapper for the Index of the lib git crate
 pub struct NucIndex(pub Rc<RefCell<Index>>);
 
@@ -46,20 +48,6 @@ impl NucRepository {
             }
         }
     }
-
-    /// find the ancestor commits and trees
-    pub fn find_ancesistor(&self, other_branch: &str) -> Result<Oid, Error> {
-        let repo=self.0.borrow();
-        let head_commits = repo.head().unwrap().peel_to_commit().unwrap();
-        let other_branch_commits =repo
-            .find_branch(other_branch, git2::BranchType::Local)
-            .unwrap()
-            .into_reference()
-            .peel_to_commit()
-            .expect("unable to fetch the commit");
-         repo.merge_base(head_commits.id(), other_branch_commits.id())
-    }
-
 }
 ///wrapper for the CheckoutBuilder of the lib git crate
 pub struct NucCheckoutBuilder<'a>(pub Rc<RefCell<CheckoutBuilder<'a>>>);
@@ -68,4 +56,18 @@ impl<'a> Clone for NucCheckoutBuilder<'a> {
     fn clone(&self) -> Self {
         Self(Rc::clone(&self.0))
     }
+}
+impl Utils for Repository{
+
+    fn find_ancesistor(&self, other_branch: &str) -> Result<Oid, Error> {
+        let head_commits = self.head().unwrap().peel_to_commit().unwrap();
+        let other_branch_commits =self
+            .find_branch(other_branch, git2::BranchType::Local)
+            .unwrap()
+            .into_reference()
+            .peel_to_commit()
+            .expect("unable to fetch the commit");
+         self.merge_base(head_commits.id(), other_branch_commits.id())
+    }
+
 }

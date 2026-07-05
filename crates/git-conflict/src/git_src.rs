@@ -1,6 +1,6 @@
 use crate::{Initialize, utils::{NucCheckoutBuilder, NucIndex, NucRepository}};
 use git2::{
-    Repository, build::CheckoutBuilder,
+    Error, Oid, Repository, build::CheckoutBuilder
 };
 use std::{
     cell::RefCell, env, path::{PathBuf}, rc::Rc,
@@ -80,5 +80,20 @@ impl<'a> Initialize for Repo<'a> {
             }
         }
     }
+
+    /// find the ancestor commits and trees
+    /// This function returns the ancestor OID that is required to fetch the commit and tree
+    fn find_ancesistor(&self, other_branch: &str) -> Result<Oid, Error> {
+        let repo=self.repo.0.borrow();
+        let head_commits = repo.head().unwrap().peel_to_commit().unwrap();
+        let other_branch_commits =repo
+            .find_branch(other_branch, git2::BranchType::Local)
+            .unwrap()
+            .into_reference()
+            .peel_to_commit()
+            .expect("unable to fetch the commit");
+         repo.merge_base(head_commits.id(), other_branch_commits.id())
+    }
+
 }
 
