@@ -29,7 +29,7 @@ pub trait Initialize {
 }
 
 pub trait ManualControl: Actions{
-    fn perform_manual_commit(&mut self) -> bool {
+    fn perform_manual_commit(&mut self, overwrite: bool) -> bool {
         let msg = format!(
             "Resolve Conflict: Merge {} branch into {} branch",
             self.branches().src_branch,
@@ -52,7 +52,11 @@ pub trait ManualControl: Actions{
             .expect("error in peeling to a commit in theirs version")
             .id();
         // // retreive the commits of "theirs" branch
-        let parent_commits = &[ours_parents_commits, theirs_parents_commits];
+        let parent_commits=match overwrite{
+            true =>,
+            false =>&[ours_parents_commits, theirs_parents_commits],
+        };
+        // let parent_commits = 
         self.commit(parent_commits, msg)
     }
 }

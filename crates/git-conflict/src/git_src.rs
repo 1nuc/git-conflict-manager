@@ -1,9 +1,9 @@
-use crate::{GitOps, Initialize, Measuments, utils::{NucCheckoutBuilder, NucIndex, NucRepository}};
+use crate::{Initialize, utils::{NucCheckoutBuilder, NucIndex, NucRepository}};
 use git2::{
-    Commit, Index, Oid, Repository, Signature, Status, StatusOptions, Time, build::CheckoutBuilder,
+    Repository, build::CheckoutBuilder,
 };
 use std::{
-    cell::RefCell, env, fs, path::{Path, PathBuf}, rc::Rc, time::{SystemTime, UNIX_EPOCH}
+    cell::RefCell, env, path::{PathBuf}, rc::Rc,
 };
 
 //define the base struct to obtain the branches naming
@@ -82,83 +82,3 @@ impl<'a> Initialize for Repo<'a> {
     }
 }
 
-#[allow(non_snake_case)]
-impl<'a> GitOps<'a> for Repo<'a> {
-
-    /// If you want to have the cimmits of both branches run this function
-    #[allow(unused_must_use)]
-    #[allow(unused_variables)]
-    fn merge_trees(&mut self) {
-        let (index, src_commit, ancestor) = self.resolve_conflict_tree_level();
-
-        let msg = format!(
-            "Resolve Conflict through tree resolution:  {} branch into {} branch",
-            self.branches.src_branch, self.branches.dest_branch
-        );
-        // get the heads commits
-        let parent_commits = &[src_commit, ancestor];
-
-        // Apply the index changes to the repository
-        self.apply_index_changes(index);
-
-        // TODO: Fix the commit call function 
-        // match self.repo.0.borrow().commit(parent_commits, msg) {
-        //     true => println!("conflict is resolved"),
-        //     false => panic!("error resolving the conflict"),
-        // }
-    }
-
-    // The checkout is the first step towards changing the index
-    fn checkout_version(&mut self, ours: bool) -> &mut Self {
-        let head_branch = self
-            .repo.0.borrow()
-            .head()
-            .expect("unable to return the reference")
-            .shorthand()
-            .expect("unable to retrieve the branch namepointed by the head")
-            .to_string();
-        //checking the branch pointed by the head to build the checkout
-        if head_branch != self.branches.src_branch && head_branch != self.branches.dest_branch {
-            panic!("head is not pointing to any branch");
-        } else {
-            match ours {
-                true => self.builder.0.borrow_mut().use_ours(true),
-                false => self.builder.0.borrow_mut().use_theirs(true),
-            };
-        }
-        self
-    }
-
-    //this function has an embedding implementation
-    #[allow(unused_must_use)]
-    fn checkout_files(&mut self) -> Vec<String> {
-        //add files paths to be checked out with the new merge
-        let files = self
-            .return_conflicted_files(Status::CONFLICTED)
-            .expect("files cannot be found");
-        // specify the files for which the checkout is to be held for
-        files
-            .iter()
-            .map(|x| {
-                //the below function adds the files to the checkout builder
-                self.builder.path(x).force();
-            })
-            .collect::<Vec<_>>();
-        files
-    }
-
-    //resolves the conflict between two branches by discarding the changes of either two branches
-    fn resolve_conflict_by_discarding(&mut self) {
-        let files = self.checkout_files();
-        let _ = self
-            .repo
-            .checkout_index(Some(&mut self.index), Some(&mut self.builder)); //revert back the index to match the index to the checkout builder
-        self.staging(files); //stage the changes
-        match self.perform_manual_commit() {
-            //commit the changes
-            true => println!("conflict is resolved"),
-            false => panic!("error resolving the conflict"),
-        }
-    }
-
-}

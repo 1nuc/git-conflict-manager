@@ -7,7 +7,7 @@
 //! extensivly used, so the usage of Reference counter is necessary that provides mutliple versions
 //! of one share instance in the memory, when combined with the ref cell, it allows for mutual
 //! mutation.
-use git2::{Index, Repository, build::CheckoutBuilder};
+use git2::{Branch, Error, Index, Oid, Repository, build::CheckoutBuilder};
 use std::{cell::RefCell, rc::Rc};
 
 ///wrapper for the Index of the lib git crate
@@ -29,7 +29,7 @@ impl Clone for NucRepository {
 }
 
 impl NucRepository {
-    fn print_index_contents(&self, index: &Index) {
+    pub fn print_index_contents(&self, index: &Index) {
         for entry in index.iter() {
             let path = String::from_utf8(entry.path).expect("unable to find path");
             if let Ok(obj) = self.0.borrow().find_object(entry.id, None) {
@@ -46,6 +46,20 @@ impl NucRepository {
             }
         }
     }
+
+    /// find the ancestor commits and trees
+    fn find_ancesistor(&self, other_branch: &str) -> Result<Oid, Error> {
+        let repo=self.0.borrow();
+        let head_commits = repo.head().unwrap().peel_to_commit().unwrap();
+        let other_branch_commits =repo
+            .find_branch(other_branch, git2::BranchType::Local)
+            .unwrap()
+            .into_reference()
+            .peel_to_commit()
+            .expect("unable to fetch the commit");
+         repo.merge_base(head_commits.id(), other_branch_commits.id())
+    }
+
 }
 ///wrapper for the CheckoutBuilder of the lib git crate
 pub struct NucCheckoutBuilder<'a>(pub Rc<RefCell<CheckoutBuilder<'a>>>);

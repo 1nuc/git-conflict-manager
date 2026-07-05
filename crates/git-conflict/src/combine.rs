@@ -7,11 +7,27 @@ use crate::{
 use std::{cell::RefMut, fs};
 
 /// This struct specifies the methodology for merging both head and theirs versions
-struct CmVersion<'a> {
+pub struct CmVersion<'a> {
     cm: Repo<'a>,
 }
 
 impl<'a> CmVersion<'a> {
+
+    pub fn new(repo: Repo<'a>) -> Self{
+        Self{
+            cm: repo,
+        }
+    }
+    pub fn resolve_conflict_by_combining(&mut self) {
+            let files = self.merge_files();
+            self.staging(files); //stage the changes
+            match self.perform_manual_commit() {
+                //commit the changes
+                true => println!("conflict is resolved"),
+                false => panic!("error resolving the conflict"),
+            }
+    }
+
     fn remove_conflict_markers(&self, file_name: String) {
         let file_path = fs::read_to_string(&file_name).unwrap();
         let modify_content = file_path

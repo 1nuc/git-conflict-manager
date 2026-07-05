@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use git2::{
-    Commit, Error, Index, IndexConflict, IndexEntry, MergeOptions, Oid, Repository, build::CheckoutBuilder};
+    Error, Index, IndexConflict, IndexEntry, MergeOptions, Oid, build::CheckoutBuilder};
 use crate::{Actions, git_src::Repo};
 
 struct TreeVersion<'a>{
@@ -8,6 +8,27 @@ struct TreeVersion<'a>{
 }
 
 impl<'a> TreeVersion <'a>{
+
+    pub fn merge_trees(&mut self) {
+        let (index, src_commit, ancestor) = self.resolve_conflict_tree_level();
+
+        let msg = format!(
+            "Resolve Conflict through tree resolution:  {} branch into {} branch",
+            self.tr.branches.src_branch, self.tr.branches.dest_branch
+        );
+        // get the heads commits
+        let parent_commits = &[src_commit, ancestor];
+
+        // Apply the index changes to the repository
+        self.apply_index_changes(index);
+
+        // TODO: Fix the commit call function 
+        match self.commit(parent_commits, msg) {
+            true => println!("conflict is resolved"),
+            false => panic!("error resolving the conflict"),
+        }
+    }
+
     fn make_entry(
         &self,
         ancestor: &IndexEntry,
@@ -58,14 +79,13 @@ impl<'a> TreeVersion <'a>{
             .into_reference()
             .peel_to_commit()
             .expect("unable to fetch the commit");
-        let oid = self
+         self
             .tr.repo.0.borrow()
-            .merge_base(head_commits.id(), other_branch_commits.id());
-        oid
+            .merge_base(head_commits.id(), other_branch_commits.id())
     }
 
     #[allow(unused_must_use)]
-    fn resolve_conflict_tree_level(&'a self) -> (Index, Oid, Oid) {
+    fn resolve_conflict_tree_level(&self) -> (Index, Oid, Oid) {
         let repo=self.tr.repo.0.borrow();
         let src_branch = repo.head().expect("unable to get the head");
 

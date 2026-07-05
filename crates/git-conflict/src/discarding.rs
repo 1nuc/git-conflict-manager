@@ -8,13 +8,18 @@ use crate::{
 };
 
 #[derive(Clone)]
-struct DsVersion<'a> {
+pub struct DsVersion<'a> {
     ds: Repo<'a>,
 }
 
 impl<'a> DsVersion<'a> {
+    pub fn new(repo: Repo<'a>) -> Self{
+        Self{
+            ds: repo,
+        }
+    }
     // The checkout is the first step towards changing the index
-    fn checkout_version(&mut self, ours: bool) -> &mut Self {
+    pub fn checkout_version(&mut self, ours: bool) -> &mut Self {
         let head_branch = self
             .ds
             .repo
@@ -40,7 +45,7 @@ impl<'a> DsVersion<'a> {
 
     //this function has an embedding implementation
     #[allow(unused_must_use)]
-    fn checkout_files(&mut self) -> Vec<String> {
+    pub fn checkout_files(&mut self) -> Vec<String> {
         //add files paths to be checked out with the new merge
         let files = self
             .return_conflicted_files(Status::CONFLICTED)
@@ -57,7 +62,7 @@ impl<'a> DsVersion<'a> {
     }
 
     //resolves the conflict between two branches by discarding the changes of either two branches
-    fn resolve_conflict_by_discarding(&mut self) {
+    pub fn resolve_conflict_by_discarding(&mut self) {
         let files = self.checkout_files();
         let self_cloned = self.clone(); //must copy as mut
         let mut index = self_cloned.ds.index.0.borrow_mut(); // take the value as mut
