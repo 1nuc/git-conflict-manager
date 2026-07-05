@@ -1,12 +1,10 @@
 use git2::{Index, Repository};
 
 use crate::{
-    Actions, ManualControl, Status, git_src::{Branches, Repo}
+    Actions, ManualControl, Status,
+    git_src::{Branches, Repo},
 };
-use std::{
-    cell::{RefMut},
-    fs,
-};
+use std::{cell::RefMut, fs};
 
 /// This struct specifies the methodology for merging both head and theirs versions
 struct CmVersion<'a> {
@@ -41,7 +39,6 @@ impl<'a> CmVersion<'a> {
             .collect::<Vec<_>>();
         files
     }
-
 }
 impl<'a> Actions for CmVersion<'a> {
     fn index(&self) -> RefMut<Index> {
@@ -50,8 +47,8 @@ impl<'a> Actions for CmVersion<'a> {
     fn repo(&self) -> RefMut<Repository> {
         self.cm.repo.0.borrow_mut()
     }
-    fn branches(&self) -> Branches{
+    fn branches(&self) -> Branches {
         self.cm.branches.clone()
     }
 }
-impl <'a>ManualControl for CmVersion<'a>{}
+impl<'a> ManualControl for CmVersion<'a> {}
