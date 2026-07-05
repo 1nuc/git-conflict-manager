@@ -1,15 +1,20 @@
 use std::{
-    cell::RefMut, fs::remove_file, path::{Path, PathBuf}, time::{SystemTime, UNIX_EPOCH}
+    cell::RefMut,
+    fs::remove_file,
+    path::{Path, PathBuf},
+    time::{SystemTime, UNIX_EPOCH},
 };
 
-use git2::{Commit, Error, Index, IndexEntry, Oid, Repository, Signature, Status, StatusOptions, Time};
+use git2::{
+    Commit, Error, Index, IndexEntry, Oid, Repository, Signature, Status, StatusOptions, Time,
+};
 
-use crate::utils::{NucIndex, NucRepository};
+use crate::{git_src::Branches, utils::{NucIndex, NucRepository}};
 pub mod combine;
 pub mod discarding;
-pub mod utils;
 pub mod git_src;
 pub mod merge_trees;
+pub mod utils;
 
 pub trait GitOps<'a> {
     fn merge_trees(&mut self);
@@ -31,15 +36,43 @@ pub trait Measuments<'a> {
     ) -> IndexEntry;
     fn apply_index_changes(&mut self, index: Index);
     fn find_ancesistor(&'a self) -> Result<Commit<'a>, Error>;
-    fn perform_manual_commit(&mut self) -> bool;
     fn resolve_conflict_tree_level(&self) -> (Index, Oid, Oid);
     fn print_index_contents(&self, index: &Index);
 }
 
+pub trait ManualControl: Actions {
+    fn perform_manual_commit(&mut self) -> bool {
+        let msg = format!(
+            "Resolve Conflict: Merge {} branch into {} branch",
+            self.branches().src_branch,
+            self.branches().dest_branch
+        );
+        // get the heads commits
+        // retreive the commits of "ours" branch and theres
+        let ours_parents_commits = self
+            .repo()
+            .head()
+            .expect("unable to find the head branch")
+            .peel_to_commit()
+            .expect("error peeling to commit in ours version")
+            .id();
+        let theirs_parents_commits = self
+            .repo()
+            .find_reference("MERGE_HEAD")
+            .expect("unable to find the second theirs reference")
+            .peel_to_commit()
+            .expect("error in peeling to a commit in theirs version")
+            .id();
+        // // retreive the commits of "theirs" branch
+        let parent_commits = &[ours_parents_commits, theirs_parents_commits];
+        self.commit(parent_commits, msg)
+    }
+}
 /// A trait that contains the necessary action required by all methodologies to resolve a conflict
-pub trait Actions{
-
+pub trait Actions {
     //Return the index
+    fn branches(&self) -> Branches;
+
     fn index(&self) -> RefMut<Index>;
 
     //Return the repo
@@ -66,10 +99,8 @@ pub trait Actions{
     //this function has an embedding implementation
     #[allow(unused_must_use)]
     fn commit(&mut self, parent_commits: &[Oid], msg: String) -> bool {
-        let repo=self.repo();
-        let tree =repo 
-            .find_tree(self.index().write_tree().unwrap())
-            .unwrap();
+        let repo = self.repo();
+        let tree = repo.find_tree(self.index().write_tree().unwrap()).unwrap();
         // Grabbing the details of the commit
         let signature = self.repo().signature().unwrap().to_owned();
         let config = self
@@ -91,9 +122,7 @@ pub trait Actions{
         let author = Signature::new(user_name, email, &time).expect("unable to create a borrow");
         let p_cm = parent_commits
             .iter()
-            .map(|x|{
-                repo.find_commit(*x).unwrap()
-            })
+            .map(|x| repo.find_commit(*x).unwrap())
             .collect::<Vec<Commit>>();
         let p_cm = p_cm.iter().collect::<Vec<&Commit>>();
         let p_commits = p_cm.as_slice();
@@ -117,7 +146,7 @@ pub trait Actions{
                 }
                 true
             }
-             _=> false,
+            _ => false,
         }
     }
 
@@ -128,7 +157,7 @@ pub trait Actions{
     //return the file with conditions
     //this function has an embedding implementation
     fn return_conflicted_files(&self, condition: Status) -> Option<Vec<String>> {
-        let repo=self.repo();
+        let repo = self.repo();
         let mut options = StatusOptions::new();
         options
             .include_untracked(false)

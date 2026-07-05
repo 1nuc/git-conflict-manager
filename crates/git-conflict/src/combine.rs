@@ -2,7 +2,7 @@ use git2::{Index, Repository};
 
 use crate::{
     Actions, Status,
-    git_src::Repo,
+    git_src::{Branches, Repo},
 };
 use std::{
     cell::{RefMut},
@@ -54,37 +54,6 @@ impl<'a> CmVersion<'a> {
         files
     }
 
-    fn perform_manual_commit(&mut self) -> bool {
-        let msg = format!(
-            "Resolve Conflict: Merge {} branch into {} branch",
-            self.repo.branches.src_branch, self.repo.branches.dest_branch
-        );
-        // get the heads commits
-        // retreive the commits of "ours" branch and theres
-        let ours_parents_commits = self
-            .repo
-            .repo
-            .0
-            .borrow()
-            .head()
-            .expect("unable to find the head branch")
-            .peel_to_commit()
-            .expect("error peeling to commit in ours version")
-            .id();
-        let theirs_parents_commits = self
-            .repo
-            .repo
-            .0
-            .borrow()
-            .find_reference("MERGE_HEAD")
-            .expect("unable to find the second theirs reference")
-            .peel_to_commit()
-            .expect("error in peeling to a commit in theirs version")
-            .id();
-        // // retreive the commits of "theirs" branch
-        let parent_commits = &[ours_parents_commits, theirs_parents_commits];
-        self.commit(parent_commits, msg)
-    }
 }
 impl<'a> Actions for CmVersion<'a> {
     fn index(&self) -> RefMut<Index> {
@@ -92,5 +61,8 @@ impl<'a> Actions for CmVersion<'a> {
     }
     fn repo(&self) -> RefMut<Repository> {
         self.repo.repo.0.borrow_mut()
+    }
+    fn branches(&self) -> Branches{
+        self.repo.branches.clone()
     }
 }
