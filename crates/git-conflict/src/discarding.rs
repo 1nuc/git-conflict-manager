@@ -1,8 +1,11 @@
-use std::{cell::RefMut, rc::Rc};
+use std::cell::RefMut;
 
 use git2::{Index, Repository, Status};
 
-use crate::{Actions, ManualControl, git_src::{Branches, Repo}};
+use crate::{
+    Actions, ManualControl,
+    git_src::{Branches, Repo},
+};
 
 #[derive(Clone)]
 struct DsVersion<'a> {
@@ -56,14 +59,16 @@ impl<'a> DsVersion<'a> {
     //resolves the conflict between two branches by discarding the changes of either two branches
     fn resolve_conflict_by_discarding(&mut self) {
         let files = self.checkout_files();
-        let self_cloned=self.clone(); //must copy as mut
-        let mut index=self_cloned.ds.index.0.borrow_mut(); // take the value as mut
-        let mut builder=self_cloned.ds.builder.0.borrow_mut();
+        let self_cloned = self.clone(); //must copy as mut
+        let mut index = self_cloned.ds.index.0.borrow_mut(); // take the value as mut
+        let mut builder = self_cloned.ds.builder.0.borrow_mut();
         // dereferencing the value to get the inner contents
-        let _ = self.ds.repo.0.borrow_mut().checkout_index(
-            Some(&mut *index),
-            Some(&mut *builder),
-        ); //revert back the index to match the index to the checkout builder
+        let _ = self
+            .ds
+            .repo
+            .0
+            .borrow_mut()
+            .checkout_index(Some(&mut *index), Some(&mut *builder)); //revert back the index to match the index to the checkout builder
         self.staging(files); //stage the changes
         match self.perform_manual_commit() {
             //commit the changes
@@ -73,7 +78,6 @@ impl<'a> DsVersion<'a> {
     }
 }
 impl<'a> Actions for DsVersion<'a> {
-
     fn index(&self) -> RefMut<Index> {
         self.ds.index.0.borrow_mut()
     }
@@ -82,7 +86,7 @@ impl<'a> Actions for DsVersion<'a> {
         self.ds.repo.0.borrow_mut()
     }
 
-    fn branches(&self) -> Branches{
+    fn branches(&self) -> Branches {
         self.ds.branches.clone()
     }
 }
