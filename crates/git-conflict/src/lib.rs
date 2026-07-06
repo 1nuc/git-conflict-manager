@@ -14,12 +14,12 @@ pub mod git_src;
 pub mod merge_trees;
 pub mod utils;
 
-pub trait GitOps<'a> {
-    fn merge_trees(&mut self);
-    fn checkout_version(&mut self, ours: bool) -> &mut Self;
-    fn checkout_files(&mut self) -> Vec<String>;
-    fn resolve_conflict_by_discarding(&mut self);
+pub trait GitOps{
+    fn call_discarding(&self, version: bool, overwrite: bool);
+    fn call_combinition(&self, overwrite: bool);
+    fn call_tree_merge(&self, version: bool, parent_interference: bool);
 }
+
 pub trait Initialize {
     fn init(branch_1: String, branch_2: String) -> Self;
     fn return_path() -> PathBuf;

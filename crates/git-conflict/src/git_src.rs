@@ -1,4 +1,4 @@
-use crate::{Initialize, utils::{NucCheckoutBuilder, NucIndex, NucRepository}};
+use crate::{GitOps, Initialize, combine::CmVersion, discarding::DsVersion, merge_trees::TreeVersion, utils::{NucCheckoutBuilder, NucIndex, NucRepository}};
 use git2::{
     Repository, build::CheckoutBuilder
 };
@@ -80,6 +80,36 @@ impl<'a> Initialize for Repo<'a> {
             }
         }
     }
+}
+impl <'a>GitOps for Repo<'a>{
+    /// This function will call the discarding methodology
+    /// version is the type of changes should we accept
+    /// if true then the changes of the head will be accepted
+    /// if false then the changes of the incoming branch will be accepted
+    /// overwrite is to specify whether to ignore or write the conflicted commits of both branches
+    fn call_discarding(&self, version: bool, overwrite: bool) {
+        let mut object=DsVersion::new(self.clone());
+        object.checkout_version(version).resolve_conflict_by_discarding(overwrite);
+    }
 
+    /// This method call the combination approach
+    /// overwrite bool is the same as before specify whether to keep or ignore previous commits 
+    fn call_combinition(&self, overwrite: bool) {
+        let mut object=CmVersion::new(self.clone());
+        object.resolve_conflict_by_combining(overwrite);
+    }
+
+    /// This is the fancy approach
+    /// apply the merge in the index, resolve the conflict in the tree
+    /// The tree and the index gets cleaned before even getting moved to the commit stage
+    /// parent interference, specifies whether the parent previous commit should be combined with
+    /// the new tree.
+    /// if set to false then the approach output resembles the discarding method
+    /// version is to specify ours or theirs
+    fn call_tree_merge(&self, version: bool, parent_interference: bool) {
+
+        let mut object=TreeVersion::new(self.clone(), version, parent_interference);
+        object.merge_trees();
+    }
 }
 
