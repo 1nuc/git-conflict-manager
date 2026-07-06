@@ -24,6 +24,7 @@ pub trait Initialize {
     fn init(branch_1: String, branch_2: String) -> Self;
     fn return_path() -> PathBuf;
     fn return_repo(file_path: PathBuf) -> Option<Repository>;
+    fn does_conflict_exists(&self) -> bool;
 }
 pub trait Utils {
     fn find_ancesistor(&self, other_branch: &str) -> Result<Oid, Error>;

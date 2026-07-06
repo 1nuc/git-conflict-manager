@@ -26,6 +26,24 @@ fn checking_value(value: i32) -> bool{
     value <6 && value >0
 }
 
+fn overwrite_check() -> bool{
+    let mut line=String::new();
+    println!("{}","Overwrite the conflicted commits of both branches ?".italic().bold().green());
+    println!("{}","For example: if the head branch latest commit is -add features x-".italic().bold().blue());
+    println!("{}","And the incoming branch commit is -fix feature x-".italic().bold().blue());
+    println!("{}","The new merge commit will if overwrite is true will overwrite both commits".italic().bold().blue());
+    println!("{}","Enter only Yes or No: ".italic().bold().blue());
+    io::stdin().read_line(&mut line).expect("Error reading the line");
+    while line.to_lowercase()!="yes".to_string() | line.to_lowercase()!="No".to_string(){
+        println!("{}", "You have to only enter Yes or No: ".italic().bold().purple());
+        io::stdin().read_line(&mut line).expect("error reading the line");
+    }
+    match line.to_lowercase().as_str(){
+        "yes" => true,
+        "no" => false,
+    }
+}
+
 #[allow(unused_must_use)]
 fn main(){
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();

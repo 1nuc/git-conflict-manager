@@ -80,7 +80,12 @@ impl<'a> Initialize for Repo<'a> {
             }
         }
     }
+
+    fn does_conflict_exists(&self) -> bool {
+        self.index.0.borrow().has_conflicts()
+    }
 }
+
 impl <'a>GitOps for Repo<'a>{
     /// This function will call the discarding methodology
     /// version is the type of changes should we accept
