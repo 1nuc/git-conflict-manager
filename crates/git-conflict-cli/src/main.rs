@@ -1,4 +1,4 @@
-use git_conflict::{GitOps, Initialize, discarding::DsVersion, git_src::Repo};
+use git_conflict::{GitOps, Initialize, git_src::Repo};
 use colored::*;
 use log::*;
 use core::panic;
@@ -157,7 +157,7 @@ fn main(){
                 }
             }
             else{
-                panic!("Error occured in getting the parent_interference value");
+                panic!("Error occured in getting the parent value");
             }
         }
         5 =>{
