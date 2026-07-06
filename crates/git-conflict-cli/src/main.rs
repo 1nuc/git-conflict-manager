@@ -26,7 +26,7 @@ fn checking_value(value: i32) -> bool{
     value <6 && value >0
 }
 
-fn overwrite_check() -> bool{
+fn overwrite_check() -> Option<bool>{
     let mut line=String::new();
     println!("{}","Overwrite the conflicted commits of both branches ?".italic().bold().green());
     println!("{}","For example: if the head branch latest commit is -add features x-".italic().bold().blue());
@@ -34,13 +34,15 @@ fn overwrite_check() -> bool{
     println!("{}","The new merge commit will if overwrite is true will overwrite both commits".italic().bold().blue());
     println!("{}","Enter only Yes or No: ".italic().bold().blue());
     io::stdin().read_line(&mut line).expect("Error reading the line");
-    while line.to_lowercase()!="yes".to_string() | line.to_lowercase()!="No".to_string(){
+    while line.to_lowercase().as_str()!= "yes" || line.to_lowercase().as_str()!="No"{
+
         println!("{}", "You have to only enter Yes or No: ".italic().bold().purple());
         io::stdin().read_line(&mut line).expect("error reading the line");
     }
     match line.to_lowercase().as_str(){
-        "yes" => true,
-        "no" => false,
+        "yes" => Some(true),
+        "no" => Some(false),
+        _=> None,
     }
 }
 
