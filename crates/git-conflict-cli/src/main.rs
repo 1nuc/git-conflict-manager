@@ -1,6 +1,7 @@
 use git_conflict::{GitOps, Initialize, discarding::DsVersion, git_src::Repo};
 use colored::*;
 use log::*;
+use core::panic;
 use std::{env, io, process::exit};
 
 fn option_panel(welcome_msg: &str, msg: &str) -> String{
@@ -46,6 +47,48 @@ fn overwrite_check() -> Option<bool>{
     }
 }
 
+
+fn parent_interference_check() -> Option<bool>{
+    let mut line=String::new();
+    println!("{}","Parenet Interference? ".italic().bold().green());
+    println!("{}","For example: if the head branch latest commit is -add features x-".italic().bold().blue());
+    println!("{}","And the incoming branch commit is -fix feature x-".italic().bold().blue());
+    println!("{}","And the ancestor commit of branches is -ship feature x-".italic().bold().blue());
+    println!("{}","The new merge commit will combine the latest cleanest path (ancestor commit) to the new accepted changes".italic().bold().blue());
+    println!("{}","Enter only Yes or No: ".italic().bold().blue());
+    io::stdin().read_line(&mut line).expect("Error reading the line");
+    while line.to_lowercase().as_str()!= "yes" || line.to_lowercase().as_str()!="No"{
+
+        println!("{}", "You have to only enter Yes or No: ".italic().bold().purple());
+        io::stdin().read_line(&mut line).expect("error reading the line");
+    }
+    match line.to_lowercase().as_str(){
+        "yes" => Some(true),
+        "no" => Some(false),
+        _=> None,
+    }
+}
+
+
+fn version_check() -> Option<bool>{
+    let mut line=String::new();
+    println!("{}","which branch to base the index or tree on: (Ours or Theirs): ".italic().bold().green());
+    println!("{}","Ours is the branch that is pointed by the head".italic().bold().blue());
+    println!("{}","Theirs is the other branch that is targeted for merge".italic().bold().blue());
+    println!("{}","Enter only ours or theirs: ".italic().bold().blue());
+    io::stdin().read_line(&mut line).expect("Error reading the line");
+    while line.to_lowercase().as_str()!= "ours" || line.to_lowercase().as_str()!="theirs"{
+
+        println!("{}", "You have to only enter ours or theirs: ".italic().bold().purple());
+        io::stdin().read_line(&mut line).expect("error reading the line");
+    }
+    match line.to_lowercase().as_str(){
+        "ours" => Some(true),
+        "theirs" => Some(false),
+        _=> None,
+    }
+}
+
 #[allow(unused_must_use)]
 fn main(){
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
@@ -80,16 +123,42 @@ fn main(){
     }
     match opt{
         1 =>{
-            git_control.checkout_version(true).resolve_conflict_by_discarding();
+            if let Some(overwrite)=overwrite_check(){
+                git_control.call_discarding(true, overwrite);
+            }
+            else{
+                panic!("Error occured in getting the overwrite value");
+            }
         },
         2 =>{
-            git_control.checkout_version(false).resolve_conflict_by_discarding();
+
+            if let Some(overwrite)=overwrite_check(){
+                git_control.call_discarding(false, overwrite);
+            }
+            else{
+                panic!("Error occured in getting the overwrite value");
+            }
         },
         3 =>{
-            git_control.resolve_conflict_by_combining();
+            if let Some(overwrite)=overwrite_check(){
+                git_control.call_combinition(overwrite);
+            }
+            else{
+                panic!("Error occured in getting the overwrite value");
+            }
         },
         4 =>{
-            git_control.merge_trees();
+            if let Some(parent_interference)=parent_interference_check(){
+                if let Some(version)=version_check(){
+                    git_control.call_tree_merge(version, parent_interference);
+                }
+                else{
+                    panic!("Error occured in getting the version value");
+                }
+            }
+            else{
+                panic!("Error occured in getting the parent_interference value");
+            }
         }
         5 =>{
             exit(0);
