@@ -14,9 +14,9 @@ pub mod git_src;
 pub mod merge_trees;
 pub mod utils;
 
-pub trait GitOps{
+pub trait GitOps {
     fn call_discarding(&self, version: bool, overwrite: bool);
-    fn call_combinition(&self, overwrite: bool);
+    fn call_combinition(&self);
     fn call_tree_merge(&self, version: bool, parent_interference: bool);
 }
 
@@ -31,7 +31,7 @@ pub trait Utils {
 }
 
 pub trait ManualControl: Actions {
-    fn perform_manual_commit(&mut self, overwrite: bool) -> bool {
+    fn perform_manual_commit(&mut self, overwrite: bool, version: bool) -> bool {
         let msg = format!(
             "Resolve Conflict: Merge {} branch into {} branch",
             self.branches().src_branch,
@@ -55,16 +55,15 @@ pub trait ManualControl: Actions {
             .id();
         // retreive the commits of "theirs" branch
 
-        //ancestor commit
-        let ancestor = self
-            .repo()
-            .find_ancesistor(&self.branches().dest_branch)
-            .expect("unable to find the ancestor oid");
-
-        let parent_commits: &[Oid] = match overwrite {
-            true => &[ancestor],
-            false => &[ours_parents_commits, theirs_parents_commits],
+        let parent_commits: &[Oid] = if overwrite {
+            match version {
+                true => &[ours_parents_commits],
+                false => &[theirs_parents_commits],
+            }
+        } else {
+            &[ours_parents_commits, theirs_parents_commits]
         };
+
         self.commit(parent_commits, msg)
     }
 }
@@ -73,24 +72,25 @@ pub trait Actions {
     //Return the index
     fn branches(&self) -> Branches;
 
-    fn index(&self) -> RefMut<'_,Index>;
+    fn index(&self) -> RefMut<'_, Index>;
 
     //Return the repo
-    fn repo(&self) -> RefMut<'_,Repository>;
+    fn repo(&self) -> RefMut<'_, Repository>;
 
     //staging changes
     //this function has an embedding implementation
     fn staging(&mut self, files: Vec<String>) {
+        let mut index = self.index();
         let _ = files
             .iter()
             .map(|x| {
                 let path = Path::new(x);
-                self.index()
+                index
                     .add_path(path)
                     .expect("Error adding the file to the staging area");
             })
             .collect::<Vec<_>>();
-        self.index()
+        index
             .write()
             .expect("unable to save the staged changes to memory");
     }
@@ -102,9 +102,8 @@ pub trait Actions {
         let repo = self.repo();
         let tree = repo.find_tree(self.index().write_tree().unwrap()).unwrap();
         // Grabbing the details of the commit
-        let signature = self.repo().signature().unwrap().to_owned();
-        let config = self
-            .repo()
+        let signature = repo.signature().unwrap().to_owned();
+        let config = repo
             .config()
             .expect("Error in retreiving the configuration")
             .snapshot()
@@ -128,14 +127,11 @@ pub trait Actions {
         let p_commits = p_cm.as_slice();
         //rust git2 doesn't automatically clean up the conflict the conflict must be deleted
 
-        match self
-            .repo()
-            .commit(Some("HEAD"), &author, &signature, &msg, &tree, p_commits)
-        {
+        match repo.commit(Some("HEAD"), &author, &signature, &msg, &tree, p_commits) {
             Ok(_val) => {
                 //after making the commit git must know that the commit is clearing the conflict
                 //therefore, MERGE_HEAD file must be deleted to indicate the success of the merge
-                let merge_head_path = self.repo().path().join("MERGE_HEAD"); // I believe this is the
+                let merge_head_path = repo.path().join("MERGE_HEAD"); // I believe this is the
                 // line where the error
                 // stems
                 //repo.path outputs the content of the .git directory

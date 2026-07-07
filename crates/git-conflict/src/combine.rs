@@ -18,10 +18,10 @@ impl<'a> CmVersion<'a> {
             cm: repo,
         }
     }
-    pub fn resolve_conflict_by_combining(&mut self, overwrite: bool) {
+    pub fn resolve_conflict_by_combining(&mut self) {
             let files = self.merge_files();
             self.staging(files); //stage the changes
-            match self.perform_manual_commit(overwrite) {
+            match self.perform_manual_commit(false, false) {
                 //commit the changes
                 true => println!("conflict is resolved"),
                 false => panic!("error resolving the conflict"),

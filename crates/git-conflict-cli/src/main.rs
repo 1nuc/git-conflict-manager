@@ -161,7 +161,7 @@ fn parent_interference_check() -> Option<bool> {
         .read_line(&mut line)
         .expect("Error reading the line");
     while line.trim_end().to_lowercase().as_str() != "yes"
-        || line.trim_end().to_lowercase().as_str() != "No"
+        && line.trim_end().to_lowercase().as_str() != "No"
     {
         line.clear();
         println!(
@@ -294,11 +294,7 @@ fn main() {
             }
         }
         3 => {
-            if let Some(overwrite) = overwrite_check() {
-                git_control.call_combinition(overwrite);
-            } else {
-                panic!("Error occured in getting the overwrite value");
-            }
+            git_control.call_combinition();
         }
         4 => {
             if let Some(parent_interference) = parent_interference_check() {
