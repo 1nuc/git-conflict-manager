@@ -68,66 +68,6 @@ fn checking_value(value: i32) -> bool {
     value < 6 && value > 0
 }
 
-#[allow(unused_must_use)]
-fn overwrite_check() -> Option<bool> {
-    let mut line = String::new();
-    println!(
-        "{}",
-        "Overwrite the conflicted commits of both branches ?"
-            .italic()
-            .bold()
-            .green()
-    );
-    println!(
-        "{}",
-        "For example: if the head branch latest commit is -add features x-"
-            .italic()
-            .bold()
-            .bright_yellow()
-    );
-    println!(
-        "{}",
-        "And the incoming branch commit is -fix feature x-"
-            .italic()
-            .bold()
-            .bright_yellow()
-    );
-    println!(
-        "{}",
-        "The new merge commit will if overwrite is true will overwrite both commits"
-            .italic()
-            .bold()
-            .bright_yellow()
-    );
-    println!(
-        "{}",
-        "Enter only Yes or No: ".italic().bold().bright_yellow()
-    );
-    io::stdin()
-        .read_line(&mut line)
-        .expect("Error reading the line");
-    while line.trim_end().to_lowercase().as_str() != "yes"
-        && line.trim_end().to_lowercase().as_str().trim_end() != "no"
-    {
-        line.clear();
-        println!(
-            "{}",
-            "You have to only enter Yes or No: "
-                .italic()
-                .bold()
-                .purple()
-        );
-        io::stdin()
-            .read_line(&mut line)
-            .expect("error reading the line");
-    }
-    match line.trim_end().to_lowercase().as_str() {
-        "yes" => Some(true),
-        "no" => Some(false),
-        _ => None,
-    }
-}
-
 fn parent_interference_check() -> Option<bool> {
     let mut line = String::new();
     println!("{}", "Parenet Interference? ".italic().bold().green());
@@ -161,7 +101,7 @@ fn parent_interference_check() -> Option<bool> {
         .read_line(&mut line)
         .expect("Error reading the line");
     while line.trim_end().to_lowercase().as_str() != "yes"
-        && line.trim_end().to_lowercase().as_str() != "No"
+        && line.trim_end().to_lowercase().as_str() != "no"
     {
         line.clear();
         println!(
@@ -209,7 +149,8 @@ fn version_check() -> Option<bool> {
     io::stdin()
         .read_line(&mut line)
         .expect("Error reading the line");
-    while line.to_lowercase().as_str() != "ours" || line.to_lowercase().as_str() != "theirs" {
+    while line.trim_end().to_lowercase().as_str() != "ours" && line.trim_end().to_lowercase().as_str() != "theirs" {
+        line.clear();
         println!(
             "{}",
             "You have to only enter ours or theirs: "
@@ -221,7 +162,7 @@ fn version_check() -> Option<bool> {
             .read_line(&mut line)
             .expect("error reading the line");
     }
-    match line.to_lowercase().as_str() {
+    match line.trim_end().to_lowercase().as_str() {
         "ours" => Some(true),
         "theirs" => Some(false),
         _ => None,
@@ -280,18 +221,10 @@ fn main() {
     }
     match opt {
         1 => {
-            if let Some(overwrite) = overwrite_check() {
-                git_control.call_discarding(true, overwrite);
-            } else {
-                panic!("Error occured in getting the overwrite value");
-            }
+                git_control.call_discarding(true);
         }
         2 => {
-            if let Some(overwrite) = overwrite_check() {
-                git_control.call_discarding(false, overwrite);
-            } else {
-                panic!("Error occured in getting the overwrite value");
-            }
+                git_control.call_discarding(false);
         }
         3 => {
             git_control.call_combinition();

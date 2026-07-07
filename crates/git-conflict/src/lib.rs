@@ -1,8 +1,5 @@
 use std::{
-    cell::RefMut,
-    fs::remove_file,
-    path::{Path, PathBuf},
-    time::{SystemTime, UNIX_EPOCH},
+    cell::RefMut, fs::remove_file, path::{Path, PathBuf}, time::{SystemTime, UNIX_EPOCH}
 };
 
 use git2::{Commit, Error, Index, Oid, Repository, Signature, Status, StatusOptions, Time};
@@ -15,7 +12,7 @@ pub mod merge_trees;
 pub mod utils;
 
 pub trait GitOps {
-    fn call_discarding(&self, version: bool, overwrite: bool);
+    fn call_discarding(&self, version: bool);
     fn call_combinition(&self);
     fn call_tree_merge(&self, version: bool, parent_interference: bool);
 }
@@ -31,7 +28,7 @@ pub trait Utils {
 }
 
 pub trait ManualControl: Actions {
-    fn perform_manual_commit(&mut self, overwrite: bool, version: bool) -> bool {
+    fn perform_manual_commit(&mut self, version: bool) -> bool {
         let msg = format!(
             "Resolve Conflict: Merge {} branch into {} branch",
             self.branches().src_branch,
@@ -55,14 +52,10 @@ pub trait ManualControl: Actions {
             .id();
         // retreive the commits of "theirs" branch
 
-        let parent_commits: &[Oid] = if overwrite {
-            match version {
+        let parent_commits: &[Oid] = match version {
                 true => &[ours_parents_commits],
                 false => &[theirs_parents_commits],
-            }
-        } else {
-            &[ours_parents_commits, theirs_parents_commits]
-        };
+            };
 
         self.commit(parent_commits, msg)
     }
@@ -98,6 +91,7 @@ pub trait Actions {
     //Making a commit
     //this function has an embedding implementation
     #[allow(unused_must_use)]
+    #[allow(non_snake_case)]
     fn commit(&mut self, parent_commits: &[Oid], msg: String) -> bool {
         let repo = self.repo();
         let tree = repo.find_tree(self.index().write_tree().unwrap()).unwrap();
@@ -142,7 +136,10 @@ pub trait Actions {
                 }
                 true
             }
-            _ => false,
+            Error=>{
+                println!("{:?}", Error);
+                false
+            }
         }
     }
 

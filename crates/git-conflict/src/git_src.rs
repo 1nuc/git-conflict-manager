@@ -92,9 +92,9 @@ impl <'a>GitOps for Repo<'a>{
     /// if true then the changes of the head will be accepted
     /// if false then the changes of the incoming branch will be accepted
     /// overwrite is to specify whether to ignore or write the conflicted commits of both branches
-    fn call_discarding(&self, version: bool, overwrite: bool) {
+    fn call_discarding(&self, version: bool) {
         let mut object=DsVersion::new(self.clone());
-        object.checkout_version(version).resolve_conflict_by_discarding(overwrite, version);
+        object.checkout_version(version).resolve_conflict_by_discarding(version);
     }
 
     /// This method call the combination approach
