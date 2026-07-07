@@ -54,7 +54,7 @@ pub trait ManualControl: Actions {
 
         let parent_commits: &[Oid] = match version {
                 true => &[ours_parents_commits],
-                false => &[theirs_parents_commits],
+                false => &[ours_parents_commits,theirs_parents_commits],
             };
 
         self.commit(parent_commits, msg)

@@ -94,7 +94,7 @@ impl <'a>GitOps for Repo<'a>{
     /// overwrite is to specify whether to ignore or write the conflicted commits of both branches
     fn call_discarding(&self, version: bool) {
         let mut object=DsVersion::new(self.clone());
-        object.checkout_version(version).resolve_conflict_by_discarding(version);
+        object.checkout_version(version).resolve_conflict_by_discarding(true);
     }
 
     /// This method call the combination approach

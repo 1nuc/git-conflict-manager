@@ -21,7 +21,7 @@ impl<'a> CmVersion<'a> {
     pub fn resolve_conflict_by_combining(&mut self) {
             let files = self.merge_files();
             self.staging(files); //stage the changes
-            match self.perform_manual_commit(false, false) {
+            match self.perform_manual_commit(false) {
                 //commit the changes
                 true => println!("conflict is resolved"),
                 false => panic!("error resolving the conflict"),
