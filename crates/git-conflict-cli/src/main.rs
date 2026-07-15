@@ -3,6 +3,7 @@ use core::panic;
 use git_conflict::{GitOps, Initialize, git_src::Repo};
 use log::*;
 use std::{env, io, process::exit};
+mod tui;
 
 fn option_panel(welcome_msg: &str, msg: &str) -> String {
     let options = [
