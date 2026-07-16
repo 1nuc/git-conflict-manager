@@ -3,6 +3,8 @@ use core::panic;
 use git_conflict::{GitOps, Initialize, git_src::Repo};
 use log::*;
 use std::{env, io, process::exit};
+
+use crate::tui::App;
 mod tui;
 
 fn option_panel(welcome_msg: &str, msg: &str) -> String {
@@ -171,7 +173,7 @@ fn version_check() -> Option<bool> {
 }
 
 #[allow(unused_must_use)]
-fn main() {
+fn main() -> io::Result<()>{
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
     let args: Vec<String> = env::args().collect();
     if args.len() < 3 {
@@ -185,7 +187,12 @@ fn main() {
         show_example();
     }
 
-    let git_control = Repo::init(args[1].clone(), args[2].clone());
+    // let git_control = Repo::init(args[1].clone(), args[2].clone());
+    let mut app=App::default();
+    ratatui::run(|terminal| app.run(terminal))
+}
+#[allow(unused_must_use)]
+fn output(git_control: Repo){
 
     if !git_control.does_conflict_exists() {
         println!(

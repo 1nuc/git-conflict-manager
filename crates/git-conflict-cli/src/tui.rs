@@ -1,17 +1,26 @@
+use std::{io};
+
 use ratatui::{
-    layout::{Constraint, Layout}, style::Style, symbols::border::Set, widgets::{Block, List, ListState, Paragraph, StatefulWidget, Widget}
+    DefaultTerminal, Frame, crossterm::{event::{self, KeyCode}}, layout::{Constraint, Layout}, style::Style, widgets::{Block, List, ListState,}
 };
 
 pub struct App<'a> {
     pub options: Vec<&'a str>,
     pub state: ListState,
+    pub exit: bool,
+}
+impl <'a>Default for App<'a>{
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<'a> App<'a> {
     pub fn new() -> Self {
         let options = Self::options();
         let state = ListState::default().with_offset(0);
-        Self { options, state }
+        let exit=false;
+        Self { options, state, exit }
     }
     fn options() -> Vec<&'a str> {
         vec![
@@ -49,24 +58,57 @@ impl<'a> App<'a> {
         };
         self.state.select(Some(i));
     }
-}
-impl<'a> StatefulWidget for &App<'a> {
-    type State = ListState;
-    fn render(
-        self,
+    fn leave(&mut self){
+        self.exit=true;
+    }
+
+    #[allow(unused_must_use)]
+    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()>{
+        while !self.exit{
+            terminal.draw(|frame|
+                self.render_options(frame, frame.area())
+            );
+            self.handle_events();
+        }
+        Ok(())
+    }
+
+    fn handle_events(&mut self){
+        if let Some(event) =event::read().expect("no key pressed").as_key_press_event(){
+            match event.code{
+                KeyCode::Char('q') | KeyCode::Esc => self.leave(),
+                KeyCode::Char('k') | KeyCode::Up => self.next(),
+                KeyCode::Char('j') | KeyCode::Down => self.prev(),
+                _ => ()
+            }
+        }
+    }
+
+    fn render_options(
+        &mut self,
+        frame: &mut Frame,
         area: ratatui::prelude::Rect,
-        buf: &mut ratatui::prelude::Buffer,
-        state: &mut Self::State,
     ) {
         let title = "Git Conflict Manager";
         let block = Block::new()
             .title(title)
             .style(Style::new().bold().italic())
             .border_type(ratatui::widgets::BorderType::Double);
-        let layout=Layout::default().constraints([Constraint::Fill(1),Constraint::Percentage(30), Constraint::Percentage(70)]);
-        let [left, right]=area.layout(&layout);
+        let layout = Layout::default().constraints([
+            Constraint::Fill(1),
+            Constraint::Percentage(30),
+            Constraint::Percentage(70),
+        ]);
+        let [left, right] = area.layout(&layout);
 
-        let list = List::new(self.options).highlight_symbol(">> ").block(block).style(Style::default().bold().white());
+        frame.render_stateful_widget(
+            List::new(self.options.clone())
+                .highlight_symbol(">> ")
+                .block(block)
+                .style(Style::default().bold().white()),
+            left,
+            &mut self.state,
+        );
     }
 }
 
