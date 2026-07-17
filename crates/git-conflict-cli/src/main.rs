@@ -7,29 +7,6 @@ use std::{env, io, process::exit};
 use crate::tui::App;
 mod tui;
 
-fn option_panel(welcome_msg: &str, msg: &str) -> String {
-    let options = [
-        "Keep Local Head Changes",
-        "Keep Foreign Branch Changes",
-        "Remove Markers and Keep Both Changes (Soon)",
-        "Merge Trees",
-        "Exit",
-    ];
-    println!("{},\n{}: ", welcome_msg, msg);
-    let _ = options
-        .iter()
-        .enumerate()
-        .map(|(i, x)| {
-            println!("Option {}: {}", 1 + i, x.italic().blue().bold());
-        })
-        .collect::<Vec<_>>();
-    println!("Select the option number: ");
-    let mut line = String::new();
-    io::stdin()
-        .read_line(&mut line)
-        .expect("error reading the line");
-    line
-}
 fn show_example() {
     warn!(
         "{}",

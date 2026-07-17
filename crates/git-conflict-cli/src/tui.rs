@@ -46,7 +46,7 @@ impl<'a> App<'a> {
         vec![
             "Keep Local Head Changes".white(),
             "Keep Foreign Branch Changes".white(),
-            "Remove Markers and Keep Both Changes (Soon)".white(),
+            "Remove Markers and Keep Both Changes".white(),
             "Merge Trees".white(),
             "Exit".white(),
         ]
@@ -135,13 +135,7 @@ impl<'a> App<'a> {
         self.render_header_footer(frame, header, footer);
         self.render_main_content(frame, left, right);
         if self.pop_up {
-            let opt_block = Block::bordered()
-                .style(Style::new().bg(Color::Black).red())
-                .title("Something");
-            let adj_area=area.centered(Constraint::Percentage(60), Constraint::Percentage(20));
-            frame.render_widget(Clear, adj_area);
-            let options=Paragraph::new(Text::from(Line::from("Are you sure you want to continue")).centered()).block(opt_block);
-            frame.render_widget(options, adj_area);
+            self.render_pop_up(frame, area);
         }
     }
 
@@ -204,5 +198,15 @@ impl<'a> App<'a> {
 
         let paragraph = Paragraph::new(Text::from(self.panel.clone().white())).block(block);
         frame.render_widget(paragraph, right);
+    }
+
+    fn render_pop_up(&mut self, frame: &mut Frame, area: Rect){
+        let opt_block = Block::bordered()
+            .style(Style::new().bg(self.bg_color).red())
+            .title("Something");
+        let adj_area=area.centered(Constraint::Percentage(60), Constraint::Percentage(20));
+        frame.render_widget(Clear, adj_area);
+        let options=Paragraph::new(Text::from(Line::from("Are you sure you want to continue")).centered()).block(opt_block);
+        frame.render_widget(options, adj_area);
     }
 }
