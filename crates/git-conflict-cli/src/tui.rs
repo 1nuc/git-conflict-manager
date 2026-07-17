@@ -2,12 +2,12 @@ use std::io;
 
 use ratatui::{
     DefaultTerminal, Frame,
-    crossterm::{event::{self, KeyCode}},
+    crossterm::event::{self, KeyCode},
     layout::{Constraint, Layout, Rect},
     style::{Color, Style, Stylize},
     symbols::border,
     text::{Line, Span, Text},
-    widgets::{Block, Clear, List, ListState, Paragraph},
+    widgets::{Block, Clear, List, ListState, Paragraph, Wrap},
 };
 
 pub struct App<'a> {
@@ -203,10 +203,10 @@ impl<'a> App<'a> {
         let exec_option=ExecOption::run(self.panel.clone()).expect("Index is None");
         let opt_block = Block::bordered()
             .style(Style::new().bg(self.bg_color).red())
-            .title_bottom(exec_option.controls);
+            .title_bottom(exec_option.controls.centered());
         let adj_area=area.centered(Constraint::Percentage(60), Constraint::Percentage(20));
         frame.render_widget(Clear, adj_area);
-        let options=Paragraph::new(Text::from(exec_option.msg).centered()).block(opt_block);
+        let options=Paragraph::new(Text::from(exec_option.msg).centered().bold()).centered().wrap(Wrap{trim: true}).block(opt_block);
         frame.render_widget(options, adj_area);
     }
 }
@@ -229,10 +229,10 @@ impl <'a>ExecOption <'a>{
     fn return_msg()-> Self{
         let msg=Line::from("Are you sure you want to execute").white().centered();
         let controls=Line::from(vec![
-            "Yes".white(),
-            "<y>".red(),
-            "No".white(),
-            "<n>".red(),
+            "Yes ".white(),
+            " <y> ".red(),
+            "No ".white(),
+            " <n>".red(),
         ]);
         Self{
             msg,
