@@ -6,8 +6,8 @@ use ratatui::{
     layout::{Constraint, Layout},
     style::{Style, Stylize},
     symbols::border,
-    text::{Line, Span},
-    widgets::{Block, List, ListState},
+    text::{Line, Span, Text},
+    widgets::{Block, List, ListState, Paragraph},
 };
 
 pub struct App<'a> {
@@ -28,7 +28,7 @@ impl<'a> App<'a> {
         let options = Self::options();
         let state = ListState::default().with_offset(0);
         let exit = false;
-        let panel="welcome to git conflict manager".to_string();
+        let panel = "welcome to git conflict manager".to_string();
         Self {
             options,
             state,
@@ -51,7 +51,6 @@ impl<'a> App<'a> {
         let i = match self.state.selected() {
             Some(index) => {
                 if index >= self.options.len() - 1 {
-                    self.panel=self.state.selected().unwrap().to_string();
                     0
                 } else {
                     index + 1
@@ -59,6 +58,7 @@ impl<'a> App<'a> {
             }
             None => 0,
         };
+        self.panel = i.to_string();
         self.state.select(Some(i));
     }
 
@@ -66,7 +66,6 @@ impl<'a> App<'a> {
         let i = match self.state.selected() {
             Some(index) => {
                 if index == 0 {
-                    self.panel=self.state.selected().unwrap().to_string();
                     self.options.len()
                 } else {
                     index - 1
@@ -74,6 +73,7 @@ impl<'a> App<'a> {
             }
             None => 0,
         };
+        self.panel = i.to_string();
         self.state.select(Some(i));
     }
 
@@ -102,13 +102,20 @@ impl<'a> App<'a> {
     }
 
     fn render_options(&mut self, frame: &mut Frame, area: ratatui::prelude::Rect) {
-        let vertical = Layout::vertical([Constraint::Length(1), Constraint::Fill(1)]).spacing(1);
+        let [header, content, footer] = Layout::vertical([
+            Constraint::Length(3),
+            Constraint::Fill(1),
+            Constraint::Length(2),
+        ])
+        .areas(area);
 
-        let horizontal =
-            Layout::horizontal([Constraint::Percentage(40), Constraint::Percentage(60)]).spacing(1);
+        let [left, right] = Layout::new(
+            ratatui::layout::Direction::Horizontal,
+            [Constraint::Percentage(40), Constraint::Percentage(60)],
+        )
+        .areas(content);
 
-        let [top, down] = area.layout(&vertical);
-        let [left, right] = area.layout(&horizontal);
+        // let [left, right] = area.layout(&horizontal);
 
         let title = Line::from(Span::from("Git Conflict Manager"));
         let instructions = Line::from(vec![
@@ -120,7 +127,8 @@ impl<'a> App<'a> {
             " <Esc> or <q>".red(),
         ]);
 
-        frame.render_widget(title.centered().bold().blue(), top);
+        frame.render_widget(title.centered().bold().blue(), header);
+        frame.render_widget(instructions.clone().centered().bold().blue(), footer);
 
         frame.render_stateful_widget(
             List::new(self.options.clone())
@@ -130,12 +138,15 @@ impl<'a> App<'a> {
                 .block(
                     Block::bordered()
                         .style(Style::new().blue().bold())
-                        .title_bottom(instructions.centered())
                         .border_set(border::DOUBLE),
                 ),
             left,
             &mut self.state,
         );
-        frame.render_widget(Line::from(Span::raw(self.panel.clone())), right);
+        let block = Block::bordered()
+            .border_set(border::DOUBLE)
+            .style(Style::new().blue().bold());
+        let paragraph = Paragraph::new(Text::from(self.panel.clone())).block(block);
+        frame.render_widget(paragraph, right);
     }
 }
