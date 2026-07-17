@@ -31,7 +31,7 @@ impl<'a> App<'a> {
         let state = ListState::default().with_offset(0);
         let exit = false;
         let panel = "welcome to git conflict manager".to_string();
-        let bg_color = Color::Rgb(0, 6, 61);
+        let bg_color = Color::Rgb(14, 9, 26);
         Self {
             options,
             state,
@@ -83,7 +83,12 @@ impl<'a> App<'a> {
     }
 
     fn leave(&mut self) {
-        self.exit = true;
+        if self.pop_up{
+            self.pop_up=false;
+        }
+        else{
+            self.exit = true;
+        }
     }
 
 
@@ -183,7 +188,7 @@ impl<'a> App<'a> {
         frame.render_stateful_widget(
             List::new(self.options.clone())
                 .highlight_symbol(">> ")
-                .highlight_style(Style::new().bold().on_red().blue())
+                .highlight_style(Style::new().bold().on_white().black())
                 .highlight_spacing(ratatui::widgets::HighlightSpacing::Always)
                 .block(
                     Block::bordered()
