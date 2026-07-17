@@ -48,7 +48,6 @@ impl<'a> App<'a> {
             "Keep Foreign Branch Changes".white(),
             "Remove Markers and Keep Both Changes".white(),
             "Merge Trees".white(),
-            "Exit".white(),
         ]
     }
 
@@ -201,12 +200,66 @@ impl<'a> App<'a> {
     }
 
     fn render_pop_up(&mut self, frame: &mut Frame, area: Rect){
+        let exec_option=ExecOption::run(self.panel.clone()).expect("Index is None");
         let opt_block = Block::bordered()
             .style(Style::new().bg(self.bg_color).red())
-            .title("Something");
+            .title_bottom(exec_option.controls);
         let adj_area=area.centered(Constraint::Percentage(60), Constraint::Percentage(20));
         frame.render_widget(Clear, adj_area);
-        let options=Paragraph::new(Text::from(Line::from("Are you sure you want to continue")).centered()).block(opt_block);
+        let options=Paragraph::new(Text::from(exec_option.msg).centered()).block(opt_block);
         frame.render_widget(options, adj_area);
     }
 }
+
+#[derive(Clone)]
+struct ExecOption<'a>{
+    msg: Line<'a>,
+    controls: Line<'a>,
+    is_tree: bool,
+}
+impl <'a>ExecOption <'a>{
+    fn run(index: String) -> Option<Self>{
+        match index.as_str(){
+            "0" |"1" |"2" => Some(Self::return_msg()),
+            "3" => Some(Self::tree_msg()), 
+            _ => None,
+        }
+    }
+    
+    fn return_msg()-> Self{
+        let msg=Line::from("Are you sure you want to execute").white().centered();
+        let controls=Line::from(vec![
+            "Yes".white(),
+            "<y>".red(),
+            "No".white(),
+            "<n>".red(),
+        ]);
+        Self{
+            msg,
+            controls,
+            is_tree: false,
+        }
+    }
+
+    fn tree_msg()-> Self{
+        let msg=Line::from(vec![
+            "Parenet Interference? ".white(),
+            "For example: if the head branch latest commit is -add features x-".white(),
+            "And the incoming branch commit is -fix feature x-".white(),
+            "And the ancestor commit of branches is -ship feature x-".white(),
+            "The new merge commit will combine the latest cleanest path (ancestor commit) to the new accepted changes".white(),
+        ]);
+        let controls=Line::from(vec![
+            "Yes".white(),
+            "<y>".red(),
+            "No".white(),
+            "<n>".red(),
+        ]);
+        Self{
+            msg,
+            controls,
+            is_tree: false,
+        }
+    }
+}
+

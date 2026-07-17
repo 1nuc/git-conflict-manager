@@ -192,42 +192,30 @@ fn output(git_control: Repo){
         .bold()
         .green();
 
-    let mut line = option_panel(
-        &welcome_msg,
-        "which conflict resolution you would like to choose",
-    );
-    while line.trim_end().parse::<i32>().is_err() {
-        line = option_panel(&welcome_msg, "Error You should only a valid option");
-    }
-    let mut opt = line.trim_end().parse::<i32>().unwrap();
-    while !checking_value(opt) {
-        line = option_panel(&welcome_msg, "You should only select a valid number");
-        opt = line.trim_end().parse::<i32>().unwrap();
-    }
-    match opt {
-        1 => {
-                git_control.call_discarding(true);
-        }
-        2 => {
-                git_control.call_discarding(false);
-        }
-        3 => {
-            git_control.call_combinition();
-        }
-        4 => {
-            if let Some(parent_interference) = parent_interference_check() {
-                if let Some(version) = version_check() {
-                    git_control.call_tree_merge(version, parent_interference);
-                } else {
-                    panic!("Error occured in getting the version value");
-                }
-            } else {
-                panic!("Error occured in getting the parent value");
-            }
-        }
-        5 => {
-            exit(0);
-        }
-        _ => warn!("undefined error"),
-    }
+    // match opt {
+    //     1 => {
+    //             git_control.call_discarding(true);
+    //     }
+    //     2 => {
+    //             git_control.call_discarding(false);
+    //     }
+    //     3 => {
+    //         git_control.call_combinition();
+    //     }
+    //     4 => {
+    //         if let Some(parent_interference) = parent_interference_check() {
+    //             if let Some(version) = version_check() {
+    //                 git_control.call_tree_merge(version, parent_interference);
+    //             } else {
+    //                 panic!("Error occured in getting the version value");
+    //             }
+    //         } else {
+    //             panic!("Error occured in getting the parent value");
+    //         }
+    //     }
+    //     5 => {
+    //         exit(0);
+    //     }
+    //     _ => warn!("undefined error"),
+    // }
 }
