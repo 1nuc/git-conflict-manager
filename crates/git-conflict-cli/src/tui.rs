@@ -1,5 +1,6 @@
-use std::io;
-
+use std::{env, io};
+use log::*;
+use git_conflict::{GitOps, Initialize, git_src::Repo};
 use ratatui::{
     DefaultTerminal, Frame,
     crossterm::event::{self, KeyCode},
@@ -17,6 +18,8 @@ pub struct App<'a> {
     panel: String,
     bg_color: Color,
     pop_up: bool,
+    exec_opt: ExecOption<'a>,
+    args: Vec<String>
 }
 
 impl<'a> Default for App<'a> {
@@ -32,6 +35,18 @@ impl<'a> App<'a> {
         let exit = false;
         let panel = "welcome to git conflict manager".to_string();
         let bg_color = Color::Rgb(14, 9, 26);
+        let exec_opt=ExecOption::default();
+        let args: Vec<String> = env::args().collect();
+        if args.len() < 3 {
+            println!(
+                "{}",
+                "You have to specify the names of the conflicted branches"
+                    .italic()
+                    .bold()
+                    .red()
+            );
+            Self::show_example();
+        }
         Self {
             options,
             state,
@@ -39,7 +54,47 @@ impl<'a> App<'a> {
             panel,
             bg_color,
             pop_up: false,
+            exec_opt,
+            args,
         }
+    }
+
+    fn show_example() {
+        warn!(
+            "{}",
+            "Example: cargo r src_branch dest_branch"
+                .italic()
+                .bold()
+                .yellow()
+        );
+        warn!(
+            "{}",
+            "src_branch is the branch is the branch you are currently at whcih is pointed by head"
+                .italic()
+                .bold()
+                .yellow()
+        );
+        warn!(
+            "{}",
+            "to check for your source branch type git status"
+                .italic()
+                .bold()
+                .yellow()
+        );
+        warn!(
+            "{}",
+            "dest_branch is the branch you are trying to merge"
+                .italic()
+                .bold()
+                .yellow()
+        );
+        warn!(
+            "{}",
+            "rewrite the command with specifying the name of the branches"
+                .italic()
+                .bold()
+                .yellow()
+        );
     }
 
     fn options() -> Vec<Span<'a>> {
@@ -95,6 +150,23 @@ impl<'a> App<'a> {
         self.pop_up= true;
     }
 
+    fn exit_pop_up(&mut self) {
+        if self.pop_up{
+            self.pop_up=false;
+        }
+    }
+
+    fn update_pop_up(&mut self) {
+        if self.pop_up{
+            if self.exec_opt.is_tree{
+                todo!()
+            }
+            else{
+                self.exec_opt.exec(args, None, None);
+            }
+        }
+    }
+
     #[allow(unused_must_use)]
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while !self.exit {
@@ -111,6 +183,8 @@ impl<'a> App<'a> {
                 KeyCode::Char('k') | KeyCode::Up => self.prev(),
                 KeyCode::Char('j') | KeyCode::Down => self.next(),
                 KeyCode::Enter | KeyCode::Char('x') => self.update(),
+                KeyCode::Char('n') => self.exit_pop_up(),
+                KeyCode::Char('y') => self.update_pop_up(),
                 _ => (),
             }
         }
@@ -200,7 +274,7 @@ impl<'a> App<'a> {
     }
 
     fn render_pop_up(&mut self, frame: &mut Frame, area: Rect){
-        let exec_option=ExecOption::run(self.panel.clone()).expect("Index is None");
+        let exec_option=self.exec_opt.run(self.panel.clone()).expect("Index is None");
         let opt_block = Block::bordered()
             .style(Style::new().bg(self.bg_color).red())
             .title_bottom(exec_option.controls.centered());
@@ -212,53 +286,97 @@ impl<'a> App<'a> {
 }
 
 #[derive(Clone)]
+enum ExecTypes{
+    AcceptLocal,
+    AcceptForeign,
+    Combination,
+    TreeMerge,
+    Idle,
+}
+
+#[derive(Clone)]
 struct ExecOption<'a>{
     msg: Line<'a>,
     controls: Line<'a>,
     is_tree: bool,
+    res_method: ExecTypes,
+}
+
+
+impl <'a> Default for ExecOption<'a>{
+    fn default() -> Self {
+        Self{
+            msg: Line::default(),
+            controls: Line::default(),
+            is_tree: false,
+            res_method: ExecTypes::Idle,
+        }
+    }
 }
 impl <'a>ExecOption <'a>{
-    fn run(index: String) -> Option<Self>{
+    fn run(&mut self, index: String) -> Option<Self>{
         match index.as_str(){
-            "0" |"1" |"2" => Some(Self::return_msg()),
-            "3" => Some(Self::tree_msg()), 
+            "0" =>{
+                self.res_method=ExecTypes::AcceptLocal;
+                self.return_msg();
+                Some(self.clone())
+            },
+            "1" =>{
+                self.res_method=ExecTypes::AcceptForeign;
+                self.return_msg();
+                Some(self.clone())
+            },
+            "2" => {
+                self.res_method=ExecTypes::Combination;
+                self.return_msg();
+                Some(self.clone())
+            },
+            "3" =>{
+                self.res_method=ExecTypes::TreeMerge;
+                self.tree_msg();
+                Some(self.clone())
+            },
             _ => None,
         }
     }
     
-    fn return_msg()-> Self{
-        let msg=Line::from("Are you sure you want to execute").white().centered();
-        let controls=Line::from(vec![
+    fn return_msg(&mut self) -> Self{
+        self.msg=Line::from("Are you sure you want to execute").white().centered();
+        self.controls=Line::from(vec![
             "Yes ".white(),
             " <y> ".red(),
             "No ".white(),
             " <n>".red(),
         ]);
-        Self{
-            msg,
-            controls,
-            is_tree: false,
-        }
+        self.clone()
     }
 
-    fn tree_msg()-> Self{
-        let msg=Line::from(vec![
+    fn tree_msg(&mut self)-> Self{
+         self.msg=Line::from(vec![
             "Parenet Interference? ".white(),
             "For example: if the head branch latest commit is -add features x-".white(),
             "And the incoming branch commit is -fix feature x-".white(),
             "And the ancestor commit of branches is -ship feature x-".white(),
             "The new merge commit will combine the latest cleanest path (ancestor commit) to the new accepted changes".white(),
         ]);
-        let controls=Line::from(vec![
+        self.controls=Line::from(vec![
             "Yes".white(),
             "<y>".red(),
             "No".white(),
             "<n>".red(),
         ]);
-        Self{
-            msg,
-            controls,
-            is_tree: false,
+        self.is_tree=true;
+        self.clone()
+    }
+
+    fn exec(&self, args: Vec<String>, parent_interference: Option<bool>, version: Option<bool>){
+        let git_control=Repo::init(args[0].clone(), args[1].clone());
+        match self.res_method{
+            ExecTypes::AcceptLocal => git_control.call_discarding(true),
+            ExecTypes::AcceptForeign => git_control.call_discarding(false),
+            ExecTypes::Combination => git_control.call_combinition(),
+            ExecTypes::TreeMerge => git_control.call_tree_merge(Some(version).is_some(), Some(parent_interference).is_some()),
+            _ =>(),
         }
     }
 }
