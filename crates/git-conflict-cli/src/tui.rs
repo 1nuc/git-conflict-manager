@@ -9,7 +9,7 @@ use ratatui::{
     text::{Line, Span, Text},
     widgets::{Block, Clear, List, ListState, Paragraph, Wrap},
 };
-use ratatui_notifications::{AutoDismiss, Notification, Notifications, SizeConstraint, Timing};
+use ratatui_notifications::{AutoDismiss, Notification, Notifications, SizeConstraint};
 use std::{env, io, time::Duration};
 
 pub struct App<'a> {
@@ -25,6 +25,7 @@ pub struct App<'a> {
     parent_interference: bool,
     overflow: bool,
     is_successful: bool,
+    is_merged: bool,
 }
 
 impl<'a> Default for App<'a> {
@@ -68,6 +69,7 @@ impl<'a> App<'a> {
             parent_interference: false,
             overflow: false,
             is_successful: false,
+            is_merged: false,
         }
     }
 
@@ -157,6 +159,9 @@ impl<'a> App<'a> {
     }
 
     fn update(&mut self) {
+        if self.is_successful{
+            self.is_merged=true;
+        }
         self.pop_up = true;
     }
 
@@ -171,7 +176,9 @@ impl<'a> App<'a> {
                         Some(self.parent_interference),
                         Some(self.overflow),
                     );
-                    self.exit=true;
+                    self.pop_up=false;
+                    self.tree_selected=false;
+                    self.is_successful=true;
                 } else {
                     self.tree_selected = true;
                 }
@@ -192,13 +199,16 @@ impl<'a> App<'a> {
                         Some(self.parent_interference),
                         Some(self.overflow),
                     );
-                    self.exit=true;
+                    self.pop_up=false;
+                    self.tree_selected=false;
+                    self.is_successful=true;
                 } else {
                     self.tree_selected = true;
                 }
             } else {
                 self.exec_opt.exec(self.args.clone(), None, None);
-                self.exit=true;
+                self.pop_up=false;
+                self.is_successful=true;
             }
         }
     }
@@ -246,6 +256,9 @@ impl<'a> App<'a> {
         if self.pop_up {
             self.render_pop_up(frame, area);
         }
+        if self.is_merged{
+            self.already_merged(frame, area);
+        }
     }
 
     fn render_header_footer(&mut self, frame: &mut Frame, header: Rect, footer: Rect) {
@@ -254,7 +267,7 @@ impl<'a> App<'a> {
 
         let instructions = Line::from(vec![
             " Scroll Down ".white(),
-            " <Left> or <j>".red(),
+            " <Down> or <j>".red(),
             " Scroll Up ".white(),
             " <Up> or <k>".red(),
             " Exit ".white(),
@@ -296,17 +309,30 @@ impl<'a> App<'a> {
                 .block(
                     Block::bordered()
                         .style(Style::new().red().bg(self.bg_color).bold())
-                        .border_set(border::DOUBLE),
+                        .border_set(border::LIGHT_QUADRUPLE_DASHED),
                 ),
             left,
             &mut self.state,
         );
         let block = Block::bordered()
-            .border_set(border::DOUBLE)
+            .border_set(border::LIGHT_QUADRUPLE_DASHED)
             .style(Style::new().red().bold().bg(self.bg_color));
 
         let paragraph = Paragraph::new(Text::from(self.panel.clone().white())).block(block);
         frame.render_widget(paragraph, right);
+    }
+
+
+    fn already_merged(&mut self, frame: &mut Frame, area: Rect) {
+        let opt_block = Block::bordered()
+            .style(Style::new().bg(self.bg_color).red());
+        let adj_area = area.centered(Constraint::Percentage(60), Constraint::Percentage(20));
+        frame.render_widget(Clear, adj_area);
+        let options = Paragraph::new(Text::from("Branches Already Merged").centered().bold())
+            .centered()
+            .wrap(Wrap { trim: true })
+            .block(opt_block.clone());
+        frame.render_widget(options, adj_area);
     }
 
     fn render_pop_up(&mut self, frame: &mut Frame, area: Rect) {
@@ -325,14 +351,14 @@ impl<'a> App<'a> {
             .block(opt_block.clone());
         frame.render_widget(options, adj_area);
         if self.tree_selected {
-            self.rende_overflow_pop_up(frame, adj_area, exec_option, opt_block);
+            self.render_overflow_pop_up(frame, adj_area, exec_option, opt_block);
         }
         if self.is_successful {
             self.render_success_msg(frame, adj_area);
         }
     }
 
-    fn rende_overflow_pop_up(
+    fn render_overflow_pop_up(
         &mut self,
         frame: &mut Frame,
         area: Rect,
@@ -352,11 +378,12 @@ impl<'a> App<'a> {
     fn render_success_msg(&mut self, frame: &mut Frame, area: Rect) {
         frame.render_widget(Clear, area);
         let mut notifications = Notifications::new();
-        let success_msg = Notification::new("Successful")
+        let success_msg = Notification::new("Successfully Merged")
             .auto_dismiss(AutoDismiss::After(Duration::from_secs(3)))
+            .border_type(ratatui::widgets::BorderType::LightQuadrupleDashed)
             .animation(ratatui_notifications::Animation::Fade)
             .anchor(ratatui_notifications::Anchor::TopRight)
-            .max_size(SizeConstraint::Percentage(0.6), SizeConstraint::Percentage(0.2))
+            .max_size(SizeConstraint::Percentage(1.0), SizeConstraint::Percentage(1.0))
             .build()
             .unwrap();
         notifications.add(success_msg);
@@ -441,7 +468,7 @@ impl<'a> ExecOption<'a> {
             "And the ancestor commit of branches is -ship feature x-".white().bold(),
             "The new merge commit will combine the latest cleanest path (ancestor commit) to the new accepted changes".white().bold(),
         ]);
-        self.controls = Line::from(vec!["Yes".white(), "<y>".red(), "No".white(), "<n>".red()]);
+        self.controls = Line::from(vec![" Yes ".white(), "<y>".red(), " No ".white(), "<n>".red(), " Leave".white(), "<q>".red()]);
         self.is_tree = true;
         self.clone()
     }
@@ -458,7 +485,7 @@ impl<'a> ExecOption<'a> {
                 .white()
                 .bold(),
         ]);
-        self.controls = Line::from(vec!["Yes".white(), "<y>".red(), "No".white(), "<n>".red()]);
+        self.controls = Line::from(vec![" Yes ".white(), "<y>".red(), " No ".white(), "<n>".red()]);
         self.clone()
     }
 
