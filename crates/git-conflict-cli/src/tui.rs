@@ -268,9 +268,6 @@ impl<'a> App<'a> {
         if self.is_merged{
             self.already_merged(frame, adj_area);
         }
-        else if !self.is_merged && self.is_successful{
-            frame.render_widget(Clear, adj_area);
-        }
     }
 
     fn render_header_footer(&mut self, frame: &mut Frame, header: Rect, footer: Rect) {
@@ -335,10 +332,9 @@ impl<'a> App<'a> {
     }
 
 
-    fn already_merged(&mut self, frame: &mut Frame, area: Rect) {
+    fn already_merged(&mut self, frame: &mut Frame, adj_area: Rect) {
         let opt_block = Block::bordered()
             .style(Style::new().bg(self.bg_color).red());
-        let adj_area = area.centered(Constraint::Percentage(60), Constraint::Percentage(20));
         frame.render_widget(Clear, adj_area);
         let options = Paragraph::new(Text::from("Branches Already Merged").centered().bold())
             .centered()
