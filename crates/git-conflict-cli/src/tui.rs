@@ -19,7 +19,8 @@ pub struct App<'a> {
     bg_color: Color,
     pop_up: bool,
     exec_opt: ExecOption<'a>,
-    args: Vec<String>
+    args: Vec<String>,
+    tree_selected: bool,
 }
 
 impl<'a> Default for App<'a> {
@@ -32,7 +33,6 @@ impl<'a> App<'a> {
     pub fn new() -> Self {
         let options = Self::options();
         let state = ListState::default().with_offset(0);
-        let exit = false;
         let panel = "welcome to git conflict manager".to_string();
         let bg_color = Color::Rgb(14, 9, 26);
         let exec_opt=ExecOption::default();
@@ -50,12 +50,13 @@ impl<'a> App<'a> {
         Self {
             options,
             state,
-            exit,
+            exit: false,
             panel,
             bg_color,
             pop_up: false,
             exec_opt,
             args,
+            tree_selected: false,
         }
     }
 
@@ -152,17 +153,27 @@ impl<'a> App<'a> {
 
     fn exit_pop_up(&mut self) {
         if self.pop_up{
-            self.pop_up=false;
+            if self.tree_selected{
+                self.tree_selected=false;
+            }
+            else{
+                self.pop_up=false;
+            }
         }
     }
 
     fn update_pop_up(&mut self) {
         if self.pop_up{
             if self.exec_opt.is_tree{
-                todo!()
+                if self.tree_selected{
+
+                }
+                else {
+                    self.tree_selected=true;
+                }
             }
             else{
-                self.exec_opt.exec(args, None, None);
+                self.exec_opt.exec(self.args.clone(), None, None);
             }
         }
     }
@@ -282,6 +293,9 @@ impl<'a> App<'a> {
         frame.render_widget(Clear, adj_area);
         let options=Paragraph::new(Text::from(exec_option.msg).centered().bold()).centered().wrap(Wrap{trim: true}).block(opt_block);
         frame.render_widget(options, adj_area);
+        if self.tree_selected{
+            todo!()
+        }
     }
 }
 

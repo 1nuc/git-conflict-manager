@@ -7,99 +7,8 @@ use std::{env, io, process::exit};
 use crate::tui::App;
 mod tui;
 
-fn show_example() {
-    warn!(
-        "{}",
-        "Example: cargo r src_branch dest_branch"
-            .italic()
-            .bold()
-            .yellow()
-    );
-    warn!(
-        "{}",
-        "src_branch is the branch is the branch you are currently at whcih is pointed by head"
-            .italic()
-            .bold()
-            .yellow()
-    );
-    warn!(
-        "{}",
-        "to check for your source branch type git status"
-            .italic()
-            .bold()
-            .yellow()
-    );
-    warn!(
-        "{}",
-        "dest_branch is the branch you are trying to merge"
-            .italic()
-            .bold()
-            .yellow()
-    );
-    warn!(
-        "{}",
-        "rewrite the command with specifying the name of the branches"
-            .italic()
-            .bold()
-            .yellow()
-    );
-}
 fn checking_value(value: i32) -> bool {
     value < 6 && value > 0
-}
-
-fn parent_interference_check() -> Option<bool> {
-    let mut line = String::new();
-    println!("{}", "Parenet Interference? ".italic().bold().green());
-    println!(
-        "{}",
-        "For example: if the head branch latest commit is -add features x-"
-            .italic()
-            .bold()
-            .bright_yellow()
-    );
-    println!(
-        "{}",
-        "And the incoming branch commit is -fix feature x-"
-            .italic()
-            .bold()
-            .bright_yellow()
-    );
-    println!(
-        "{}",
-        "And the ancestor commit of branches is -ship feature x-"
-            .italic()
-            .bold()
-            .bright_yellow()
-    );
-    println!("{}","The new merge commit will combine the latest cleanest path (ancestor commit) to the new accepted changes".italic().bold().bright_yellow());
-    println!(
-        "{}",
-        "Enter only Yes or No: ".italic().bold().bright_yellow()
-    );
-    io::stdin()
-        .read_line(&mut line)
-        .expect("Error reading the line");
-    while line.trim_end().to_lowercase().as_str() != "yes"
-        && line.trim_end().to_lowercase().as_str() != "no"
-    {
-        line.clear();
-        println!(
-            "{}",
-            "You have to only enter Yes or No: "
-                .italic()
-                .bold()
-                .purple()
-        );
-        io::stdin()
-            .read_line(&mut line)
-            .expect("error reading the line");
-    }
-    match line.trim_end().to_lowercase().as_str() {
-        "yes" => Some(true),
-        "no" => Some(false),
-        _ => None,
-    }
 }
 
 fn version_check() -> Option<bool> {
@@ -152,17 +61,6 @@ fn version_check() -> Option<bool> {
 #[allow(unused_must_use)]
 fn main() -> io::Result<()>{
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 3 {
-        println!(
-            "{}",
-            "You have to specify the names of the conflicted branches"
-                .italic()
-                .bold()
-                .red()
-        );
-        show_example();
-    }
 
     // let git_control = Repo::init(args[1].clone(), args[2].clone());
     let mut app=App::default();
