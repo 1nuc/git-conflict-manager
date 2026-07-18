@@ -52,6 +52,9 @@ impl<'a> App<'a> {
             Self::show_example();
             panic!("Names of the branches must be manually provided");
         }
+        if !exec_opt.conflicts_exist(args.clone()){
+            panic!("There is no conflict in your current git index")
+        }
         Self {
             options,
             state,
@@ -168,8 +171,7 @@ impl<'a> App<'a> {
                         Some(self.parent_interference),
                         Some(self.overflow),
                     );
-                    self.pop_up = false;
-                    self.is_successful = true;
+                    self.exit=true;
                 } else {
                     self.tree_selected = true;
                 }
@@ -190,14 +192,13 @@ impl<'a> App<'a> {
                         Some(self.parent_interference),
                         Some(self.overflow),
                     );
-                    self.pop_up = false;
-                    self.is_successful = true;
+                    self.exit=true;
                 } else {
                     self.tree_selected = true;
                 }
             } else {
                 self.exec_opt.exec(self.args.clone(), None, None);
-                self.pop_up = false;
+                self.exit=true;
             }
         }
     }
@@ -352,7 +353,6 @@ impl<'a> App<'a> {
         frame.render_widget(Clear, area);
         let mut notifications = Notifications::new();
         let success_msg = Notification::new("Successful")
-            .level(ratatui_notifications::Level::Info)
             .auto_dismiss(AutoDismiss::After(Duration::from_secs(3)))
             .animation(ratatui_notifications::Animation::Fade)
             .anchor(ratatui_notifications::Anchor::TopRight)
@@ -472,5 +472,9 @@ impl<'a> ExecOption<'a> {
                 .call_tree_merge(Some(version).is_some(), Some(parent_interference).is_some()),
             _ => (),
         }
+    }
+    fn conflicts_exist(&self, args: Vec<String>) -> bool{
+        let git_control = Repo::init(args[1].clone(), args[2].clone());
+        git_control.does_conflict_exists()
     }
 }
