@@ -9,7 +9,7 @@ use ratatui::{
     text::{Line, Span, Text},
     widgets::{Block, Clear, List, ListState, Paragraph, Wrap},
 };
-use ratatui_notifications::{AutoDismiss, Notification, Notifications, SizeConstraint};
+use ratatui_notifications::{AutoDismiss, Notification, Notifications, SizeConstraint, Timing};
 use std::{env, io, time::Duration};
 
 pub struct App<'a> {
@@ -212,6 +212,11 @@ impl<'a> App<'a> {
             }
         }
     }
+    fn remove_added_popup(&mut self){
+        if self.is_merged{
+            self.is_merged=false;
+        }
+    }
 
     #[allow(unused_must_use)]
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
@@ -224,6 +229,7 @@ impl<'a> App<'a> {
 
     fn handle_events(&mut self) {
         if let Some(event) = event::read().expect("no key pressed").as_key_press_event() {
+            self.is_merged=false;
             match event.code {
                 KeyCode::Char('q') | KeyCode::Esc => self.leave(),
                 KeyCode::Char('k') | KeyCode::Up => self.prev(),
@@ -251,13 +257,17 @@ impl<'a> App<'a> {
         )
         .spacing(1)
         .areas(content);
+        let adj_area = area.centered(Constraint::Percentage(60), Constraint::Percentage(20));
         self.render_header_footer(frame, header, footer);
         self.render_main_content(frame, left, right);
         if self.pop_up {
-            self.render_pop_up(frame, area);
+            self.render_pop_up(frame, adj_area);
         }
         if self.is_merged{
-            self.already_merged(frame, area);
+            self.already_merged(frame, adj_area);
+        }
+        else{
+            frame.render_widget(Clear, adj_area);
         }
     }
 
@@ -335,7 +345,7 @@ impl<'a> App<'a> {
         frame.render_widget(options, adj_area);
     }
 
-    fn render_pop_up(&mut self, frame: &mut Frame, area: Rect) {
+    fn render_pop_up(&mut self, frame: &mut Frame, adj_area: Rect) {
         let exec_option = self
             .exec_opt
             .run(self.panel.clone())
@@ -343,7 +353,6 @@ impl<'a> App<'a> {
         let opt_block = Block::bordered()
             .style(Style::new().bg(self.bg_color).red())
             .title_bottom(exec_option.clone().controls.centered());
-        let adj_area = area.centered(Constraint::Percentage(60), Constraint::Percentage(20));
         frame.render_widget(Clear, adj_area);
         let options = Paragraph::new(Text::from(exec_option.clone().msg).centered().bold())
             .centered()
@@ -379,11 +388,10 @@ impl<'a> App<'a> {
         frame.render_widget(Clear, area);
         let mut notifications = Notifications::new();
         let success_msg = Notification::new("Successfully Merged")
-            .auto_dismiss(AutoDismiss::After(Duration::from_secs(3)))
+            .timing(Timing::Auto, Timing::Fixed(Duration::from_secs(3)), Timing::Fixed(Duration::from_secs(3)))
             .border_type(ratatui::widgets::BorderType::LightQuadrupleDashed)
             .animation(ratatui_notifications::Animation::Fade)
-            .anchor(ratatui_notifications::Anchor::TopRight)
-            .max_size(SizeConstraint::Percentage(1.0), SizeConstraint::Percentage(1.0))
+            .anchor(ratatui_notifications::Anchor::MiddleCenter)
             .build()
             .unwrap();
         notifications.add(success_msg);
