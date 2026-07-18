@@ -389,7 +389,7 @@ impl<'a> App<'a> {
             .build()
             .unwrap();
         notifications.add(success_msg);
-        notifications.tick(Duration::from_secs(3));
+        notifications.tick(Duration::from_secs(18));
     }
 }
 
