@@ -162,7 +162,9 @@ impl<'a> App<'a> {
         if self.is_successful{
             self.is_merged=true;
         }
-        self.pop_up = true;
+        else{
+            self.pop_up = true;
+        }
     }
 
     fn exit_pop_up(&mut self) {
@@ -229,7 +231,7 @@ impl<'a> App<'a> {
 
     fn handle_events(&mut self) {
         if let Some(event) = event::read().expect("no key pressed").as_key_press_event() {
-            self.is_merged=false;
+            self.remove_added_popup();
             match event.code {
                 KeyCode::Char('q') | KeyCode::Esc => self.leave(),
                 KeyCode::Char('k') | KeyCode::Up => self.prev(),
@@ -266,7 +268,7 @@ impl<'a> App<'a> {
         if self.is_merged{
             self.already_merged(frame, adj_area);
         }
-        else{
+        else if !self.is_merged && self.is_successful{
             frame.render_widget(Clear, adj_area);
         }
     }
@@ -362,9 +364,6 @@ impl<'a> App<'a> {
         if self.tree_selected {
             self.render_overflow_pop_up(frame, adj_area, exec_option, opt_block);
         }
-        if self.is_successful {
-            self.render_success_msg(frame, adj_area);
-        }
     }
 
     fn render_overflow_pop_up(
@@ -385,7 +384,6 @@ impl<'a> App<'a> {
 
     #[allow(unused_must_use)]
     fn render_success_msg(&mut self, frame: &mut Frame, area: Rect) {
-        frame.render_widget(Clear, area);
         let mut notifications = Notifications::new();
         let success_msg = Notification::new("Successfully Merged")
             .timing(Timing::Auto, Timing::Fixed(Duration::from_secs(3)), Timing::Fixed(Duration::from_secs(3)))
