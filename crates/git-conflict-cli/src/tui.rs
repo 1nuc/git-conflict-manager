@@ -9,7 +9,7 @@ use ratatui::{
     text::{Line, Span, Text},
     widgets::{Block, Clear, List, ListState, Paragraph, Wrap},
 };
-use ratatui_notifications::{Notification, Notifications};
+use ratatui_notifications::{AutoDismiss, Notification, Notifications, SizeConstraint, Timing};
 use std::{env, io, time::Duration};
 
 pub struct App<'a> {
@@ -50,6 +50,7 @@ impl<'a> App<'a> {
                     .red()
             );
             Self::show_example();
+            panic!("Names of the branches must be manually provided");
         }
         Self {
             options,
@@ -160,7 +161,6 @@ impl<'a> App<'a> {
         if self.pop_up {
             if self.exec_opt.is_tree {
                 self.parent_interference = false;
-                self.tree_selected = true;
                 if self.tree_selected {
                     self.overflow = false;
                     self.exec_opt.exec(
@@ -170,6 +170,8 @@ impl<'a> App<'a> {
                     );
                     self.pop_up = false;
                     self.is_successful = true;
+                } else {
+                    self.tree_selected = true;
                 }
             } else {
                 self.pop_up = false;
@@ -181,7 +183,6 @@ impl<'a> App<'a> {
         if self.pop_up {
             if self.exec_opt.is_tree {
                 self.parent_interference = true;
-                self.tree_selected = true;
                 if self.tree_selected {
                     self.overflow = true;
                     self.exec_opt.exec(
@@ -191,6 +192,8 @@ impl<'a> App<'a> {
                     );
                     self.pop_up = false;
                     self.is_successful = true;
+                } else {
+                    self.tree_selected = true;
                 }
             } else {
                 self.exec_opt.exec(self.args.clone(), None, None);
@@ -347,11 +350,13 @@ impl<'a> App<'a> {
     #[allow(unused_must_use)]
     fn render_success_msg(&mut self, frame: &mut Frame, area: Rect) {
         frame.render_widget(Clear, area);
-        let mut notifications=Notifications::new();
+        let mut notifications = Notifications::new();
         let success_msg = Notification::new("Successful")
             .level(ratatui_notifications::Level::Info)
+            .auto_dismiss(AutoDismiss::After(Duration::from_secs(3)))
             .animation(ratatui_notifications::Animation::Fade)
-            .anchor(ratatui_notifications::Anchor::MiddleCenter)
+            .anchor(ratatui_notifications::Anchor::TopRight)
+            .max_size(SizeConstraint::Percentage(0.6), SizeConstraint::Percentage(0.2))
             .build()
             .unwrap();
         notifications.add(success_msg);
@@ -430,11 +435,11 @@ impl<'a> ExecOption<'a> {
 
     fn tree_msg(&mut self) -> Self {
         self.msg=Line::from(vec![
-            "Parenet Interference? ".green().bold(),
-            "For example: if the head branch latest commit is -add features x-".green().bold(),
-            "And the incoming branch commit is -fix feature x-".green().bold(),
-            "And the ancestor commit of branches is -ship feature x-".green().bold(),
-            "The new merge commit will combine the latest cleanest path (ancestor commit) to the new accepted changes".green().bold(),
+            "Parenet Interference? ".white().bold(),
+            "For example: if the head branch latest commit is -add features x-".white().bold(),
+            "And the incoming branch commit is -fix feature x-".white().bold(),
+            "And the ancestor commit of branches is -ship feature x-".white().bold(),
+            "The new merge commit will combine the latest cleanest path (ancestor commit) to the new accepted changes".white().bold(),
         ]);
         self.controls = Line::from(vec!["Yes".white(), "<y>".red(), "No".white(), "<n>".red()]);
         self.is_tree = true;
@@ -444,13 +449,13 @@ impl<'a> ExecOption<'a> {
     fn return_overflow_msg(&mut self) -> Self {
         self.overflow_msg = Line::from(vec![
             "which branch to base the index or tree on: (Ours or Theirs): "
-                .green()
+                .white()
                 .bold(),
             "Ours is the branch that is pointed by the head"
-                .green()
+                .white()
                 .bold(),
             "Theirs is the other branch that is targeted for merge"
-                .green()
+                .white()
                 .bold(),
         ]);
         self.controls = Line::from(vec!["Yes".white(), "<y>".red(), "No".white(), "<n>".red()]);
@@ -458,7 +463,7 @@ impl<'a> ExecOption<'a> {
     }
 
     fn exec(&self, args: Vec<String>, parent_interference: Option<bool>, version: Option<bool>) {
-        let git_control = Repo::init(args[0].clone(), args[1].clone());
+        let git_control = Repo::init(args[1].clone(), args[2].clone());
         match self.res_method {
             ExecTypes::AcceptLocal => git_control.call_discarding(true),
             ExecTypes::AcceptForeign => git_control.call_discarding(false),
