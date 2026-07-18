@@ -1,6 +1,5 @@
-use std::{env, io};
-use log::*;
 use git_conflict::{GitOps, Initialize, git_src::Repo};
+use log::*;
 use ratatui::{
     DefaultTerminal, Frame,
     crossterm::event::{self, KeyCode},
@@ -10,6 +9,8 @@ use ratatui::{
     text::{Line, Span, Text},
     widgets::{Block, Clear, List, ListState, Paragraph, Wrap},
 };
+use ratatui_notifications::{Notification, Notifications};
+use std::{env, io, time::Duration};
 
 pub struct App<'a> {
     options: Vec<Span<'a>>,
@@ -21,6 +22,9 @@ pub struct App<'a> {
     exec_opt: ExecOption<'a>,
     args: Vec<String>,
     tree_selected: bool,
+    parent_interference: bool,
+    overflow: bool,
+    is_successful: bool,
 }
 
 impl<'a> Default for App<'a> {
@@ -35,7 +39,7 @@ impl<'a> App<'a> {
         let state = ListState::default().with_offset(0);
         let panel = "welcome to git conflict manager".to_string();
         let bg_color = Color::Rgb(14, 9, 26);
-        let exec_opt=ExecOption::default();
+        let exec_opt = ExecOption::default();
         let args: Vec<String> = env::args().collect();
         if args.len() < 3 {
             println!(
@@ -57,6 +61,9 @@ impl<'a> App<'a> {
             exec_opt,
             args,
             tree_selected: false,
+            parent_interference: false,
+            overflow: false,
+            is_successful: false,
         }
     }
 
@@ -138,42 +145,56 @@ impl<'a> App<'a> {
     }
 
     fn leave(&mut self) {
-        if self.pop_up{
-            self.pop_up=false;
-        }
-        else{
+        if self.pop_up {
+            self.pop_up = false;
+        } else {
             self.exit = true;
         }
     }
 
-
     fn update(&mut self) {
-        self.pop_up= true;
+        self.pop_up = true;
     }
 
     fn exit_pop_up(&mut self) {
-        if self.pop_up{
-            if self.tree_selected{
-                self.tree_selected=false;
-            }
-            else{
-                self.pop_up=false;
+        if self.pop_up {
+            if self.exec_opt.is_tree {
+                self.parent_interference = false;
+                self.tree_selected = true;
+                if self.tree_selected {
+                    self.overflow = false;
+                    self.exec_opt.exec(
+                        self.args.clone(),
+                        Some(self.parent_interference),
+                        Some(self.overflow),
+                    );
+                    self.pop_up = false;
+                    self.is_successful = true;
+                }
+            } else {
+                self.pop_up = false;
             }
         }
     }
 
     fn update_pop_up(&mut self) {
-        if self.pop_up{
-            if self.exec_opt.is_tree{
-                if self.tree_selected{
-
+        if self.pop_up {
+            if self.exec_opt.is_tree {
+                self.parent_interference = true;
+                self.tree_selected = true;
+                if self.tree_selected {
+                    self.overflow = true;
+                    self.exec_opt.exec(
+                        self.args.clone(),
+                        Some(self.parent_interference),
+                        Some(self.overflow),
+                    );
+                    self.pop_up = false;
+                    self.is_successful = true;
                 }
-                else {
-                    self.tree_selected=true;
-                }
-            }
-            else{
+            } else {
                 self.exec_opt.exec(self.args.clone(), None, None);
+                self.pop_up = false;
             }
         }
     }
@@ -284,23 +305,62 @@ impl<'a> App<'a> {
         frame.render_widget(paragraph, right);
     }
 
-    fn render_pop_up(&mut self, frame: &mut Frame, area: Rect){
-        let exec_option=self.exec_opt.run(self.panel.clone()).expect("Index is None");
+    fn render_pop_up(&mut self, frame: &mut Frame, area: Rect) {
+        let exec_option = self
+            .exec_opt
+            .run(self.panel.clone())
+            .expect("Index is None");
         let opt_block = Block::bordered()
             .style(Style::new().bg(self.bg_color).red())
-            .title_bottom(exec_option.controls.centered());
-        let adj_area=area.centered(Constraint::Percentage(60), Constraint::Percentage(20));
+            .title_bottom(exec_option.clone().controls.centered());
+        let adj_area = area.centered(Constraint::Percentage(60), Constraint::Percentage(20));
         frame.render_widget(Clear, adj_area);
-        let options=Paragraph::new(Text::from(exec_option.msg).centered().bold()).centered().wrap(Wrap{trim: true}).block(opt_block);
+        let options = Paragraph::new(Text::from(exec_option.clone().msg).centered().bold())
+            .centered()
+            .wrap(Wrap { trim: true })
+            .block(opt_block.clone());
         frame.render_widget(options, adj_area);
-        if self.tree_selected{
-            todo!()
+        if self.tree_selected {
+            self.rende_overflow_pop_up(frame, adj_area, exec_option, opt_block);
         }
+        if self.is_successful {
+            self.render_success_msg(frame, adj_area);
+        }
+    }
+
+    fn rende_overflow_pop_up(
+        &mut self,
+        frame: &mut Frame,
+        area: Rect,
+        mut exec_option: ExecOption,
+        block: Block,
+    ) {
+        let exec_option = exec_option.return_overflow_msg();
+        frame.render_widget(Clear, area);
+        let options = Paragraph::new(Text::from(exec_option.overflow_msg).centered().bold())
+            .centered()
+            .wrap(Wrap { trim: true })
+            .block(block);
+        frame.render_widget(options, area);
+    }
+
+    #[allow(unused_must_use)]
+    fn render_success_msg(&mut self, frame: &mut Frame, area: Rect) {
+        frame.render_widget(Clear, area);
+        let mut notifications=Notifications::new();
+        let success_msg = Notification::new("Successful")
+            .level(ratatui_notifications::Level::Info)
+            .animation(ratatui_notifications::Animation::Fade)
+            .anchor(ratatui_notifications::Anchor::MiddleCenter)
+            .build()
+            .unwrap();
+        notifications.add(success_msg);
+        notifications.tick(Duration::from_secs(3));
     }
 }
 
 #[derive(Clone)]
-enum ExecTypes{
+enum ExecTypes {
     AcceptLocal,
     AcceptForeign,
     Combination,
@@ -309,54 +369,57 @@ enum ExecTypes{
 }
 
 #[derive(Clone)]
-struct ExecOption<'a>{
+struct ExecOption<'a> {
     msg: Line<'a>,
+    overflow_msg: Line<'a>,
     controls: Line<'a>,
     is_tree: bool,
     res_method: ExecTypes,
 }
 
-
-impl <'a> Default for ExecOption<'a>{
+impl<'a> Default for ExecOption<'a> {
     fn default() -> Self {
-        Self{
+        Self {
             msg: Line::default(),
+            overflow_msg: Line::default(),
             controls: Line::default(),
             is_tree: false,
             res_method: ExecTypes::Idle,
         }
     }
 }
-impl <'a>ExecOption <'a>{
-    fn run(&mut self, index: String) -> Option<Self>{
-        match index.as_str(){
-            "0" =>{
-                self.res_method=ExecTypes::AcceptLocal;
+impl<'a> ExecOption<'a> {
+    fn run(&mut self, index: String) -> Option<Self> {
+        match index.as_str() {
+            "0" => {
+                self.res_method = ExecTypes::AcceptLocal;
                 self.return_msg();
                 Some(self.clone())
-            },
-            "1" =>{
-                self.res_method=ExecTypes::AcceptForeign;
+            }
+            "1" => {
+                self.res_method = ExecTypes::AcceptForeign;
                 self.return_msg();
                 Some(self.clone())
-            },
+            }
             "2" => {
-                self.res_method=ExecTypes::Combination;
+                self.res_method = ExecTypes::Combination;
                 self.return_msg();
                 Some(self.clone())
-            },
-            "3" =>{
-                self.res_method=ExecTypes::TreeMerge;
+            }
+            "3" => {
+                self.res_method = ExecTypes::TreeMerge;
                 self.tree_msg();
                 Some(self.clone())
-            },
+            }
             _ => None,
         }
     }
-    
-    fn return_msg(&mut self) -> Self{
-        self.msg=Line::from("Are you sure you want to execute").white().centered();
-        self.controls=Line::from(vec![
+
+    fn return_msg(&mut self) -> Self {
+        self.msg = Line::from("Are you sure you want to execute")
+            .white()
+            .centered();
+        self.controls = Line::from(vec![
             "Yes ".white(),
             " <y> ".red(),
             "No ".white(),
@@ -365,33 +428,44 @@ impl <'a>ExecOption <'a>{
         self.clone()
     }
 
-    fn tree_msg(&mut self)-> Self{
-         self.msg=Line::from(vec![
-            "Parenet Interference? ".white(),
-            "For example: if the head branch latest commit is -add features x-".white(),
-            "And the incoming branch commit is -fix feature x-".white(),
-            "And the ancestor commit of branches is -ship feature x-".white(),
-            "The new merge commit will combine the latest cleanest path (ancestor commit) to the new accepted changes".white(),
+    fn tree_msg(&mut self) -> Self {
+        self.msg=Line::from(vec![
+            "Parenet Interference? ".green().bold(),
+            "For example: if the head branch latest commit is -add features x-".green().bold(),
+            "And the incoming branch commit is -fix feature x-".green().bold(),
+            "And the ancestor commit of branches is -ship feature x-".green().bold(),
+            "The new merge commit will combine the latest cleanest path (ancestor commit) to the new accepted changes".green().bold(),
         ]);
-        self.controls=Line::from(vec![
-            "Yes".white(),
-            "<y>".red(),
-            "No".white(),
-            "<n>".red(),
-        ]);
-        self.is_tree=true;
+        self.controls = Line::from(vec!["Yes".white(), "<y>".red(), "No".white(), "<n>".red()]);
+        self.is_tree = true;
         self.clone()
     }
 
-    fn exec(&self, args: Vec<String>, parent_interference: Option<bool>, version: Option<bool>){
-        let git_control=Repo::init(args[0].clone(), args[1].clone());
-        match self.res_method{
+    fn return_overflow_msg(&mut self) -> Self {
+        self.overflow_msg = Line::from(vec![
+            "which branch to base the index or tree on: (Ours or Theirs): "
+                .green()
+                .bold(),
+            "Ours is the branch that is pointed by the head"
+                .green()
+                .bold(),
+            "Theirs is the other branch that is targeted for merge"
+                .green()
+                .bold(),
+        ]);
+        self.controls = Line::from(vec!["Yes".white(), "<y>".red(), "No".white(), "<n>".red()]);
+        self.clone()
+    }
+
+    fn exec(&self, args: Vec<String>, parent_interference: Option<bool>, version: Option<bool>) {
+        let git_control = Repo::init(args[0].clone(), args[1].clone());
+        match self.res_method {
             ExecTypes::AcceptLocal => git_control.call_discarding(true),
             ExecTypes::AcceptForeign => git_control.call_discarding(false),
             ExecTypes::Combination => git_control.call_combinition(),
-            ExecTypes::TreeMerge => git_control.call_tree_merge(Some(version).is_some(), Some(parent_interference).is_some()),
-            _ =>(),
+            ExecTypes::TreeMerge => git_control
+                .call_tree_merge(Some(version).is_some(), Some(parent_interference).is_some()),
+            _ => (),
         }
     }
 }
-
