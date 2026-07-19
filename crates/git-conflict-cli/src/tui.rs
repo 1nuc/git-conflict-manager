@@ -337,17 +337,17 @@ impl<'a> App<'a> {
         if let Some(exec_option) = self
             .exec_opt
             .run(self.panel.clone()){
+            frame.render_widget(Clear, adj_area);
             let opt_block = Block::bordered()
                 .style(Style::new().bg(self.bg_color).red())
                 .title_bottom(exec_option.clone().controls.centered());
-            frame.render_widget(Clear, adj_area);
             let options = Paragraph::new(Text::from(exec_option.clone().msg).centered().bold())
                 .centered()
                 .wrap(Wrap { trim: true })
                 .block(opt_block.clone());
             frame.render_widget(options, adj_area);
             if self.tree_selected {
-                self.render_overflow_pop_up(frame, adj_area, exec_option, opt_block);
+                self.render_overflow_pop_up(frame, adj_area, exec_option);
             }
         }
     }
@@ -357,9 +357,11 @@ impl<'a> App<'a> {
         frame: &mut Frame,
         area: Rect,
         mut exec_option: ExecOption,
-        block: Block,
     ) {
         let exec_option = exec_option.return_overflow_msg();
+        let block = Block::bordered()
+            .style(Style::new().bg(self.bg_color).red())
+            .title_bottom(exec_option.clone().controls.centered());
         frame.render_widget(Clear, area);
         let options = Paragraph::new(Text::from(exec_option.overflow_msg).centered().bold())
             .centered()
