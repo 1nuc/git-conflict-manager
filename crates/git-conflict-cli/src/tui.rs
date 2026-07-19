@@ -82,7 +82,7 @@ impl<'a> App<'a> {
         );
         warn!(
             "{}",
-            colored::Colorize::italic("src_branch is the branch is the branch you are currently at whcih is pointed by head")
+            colored::Colorize::italic("src_branch is the branch you are currently at whcih is pointed by head")
                 .bold()
                 .yellow()
         );
