@@ -10,18 +10,17 @@ use ratatui::{
     widgets::{Block, Clear, List, ListState, Paragraph, Wrap},
 };
 use tui_big_text::BigText;
-use std::{env, io};
+use std::{env, io, time::Duration};
 
-const COLORS: &[Color]=&[
+const COLORS: &[Color] = &[
     Color::Red,
-    Color::Black,
-    Color::Green,
-    Color::Blue,
-    Color::White,
     Color::Yellow,
-    Color::Magenta,
+    Color::Green,
     Color::Cyan,
-    Color::Gray
+    Color::Blue,
+    Color::Magenta,
+    Color::White,
+    Color::Gray,
 ];
 
 pub struct App<'a> {
@@ -242,23 +241,25 @@ impl<'a> App<'a> {
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while !self.exit {
             terminal.draw(|frame| self.render(frame, frame.area()));
-            self.handle_events();
             self.tick();
+            self.handle_events();
         }
         Ok(())
     }
 
     fn handle_events(&mut self) {
-        if let Some(event) = event::read().expect("no key pressed").as_key_press_event() {
-            self.remove_added_popup();
-            match event.code {
-                KeyCode::Char('q') | KeyCode::Esc => self.leave(),
-                KeyCode::Char('k') | KeyCode::Up => self.prev(),
-                KeyCode::Char('j') | KeyCode::Down => self.next(),
-                KeyCode::Enter | KeyCode::Char('x') => self.update(),
-                KeyCode::Char('n') => self.exit_pop_up(),
-                KeyCode::Char('y') => self.update_pop_up(),
-                _ => (),
+        if event::poll(Duration::from_secs(0)).expect("no key pressed"){
+            if let Some(event)=event::read().expect("error in fetching events").as_key_press_event(){
+                self.remove_added_popup();
+                match event.code {
+                    KeyCode::Char('q') | KeyCode::Esc => self.leave(),
+                    KeyCode::Char('k') | KeyCode::Up => self.prev(),
+                    KeyCode::Char('j') | KeyCode::Down => self.next(),
+                    KeyCode::Enter | KeyCode::Char('x') => self.update(),
+                    KeyCode::Char('n') => self.exit_pop_up(),
+                    KeyCode::Char('y') => self.update_pop_up(),
+                    _ => (),
+                }
             }
         }
     }
@@ -303,9 +304,9 @@ impl<'a> App<'a> {
             " <Enter> or <x>".red(),
         ]);
 
-        let big_title=BigText::builder().centered().pixel_size(tui_big_text::PixelSize::Quadrant).lines(vec![
+        let big_title=BigText::builder().centered().pixel_size(tui_big_text::PixelSize::Sextant).lines(vec![
             "Git Conflict Manager".into(),
-        ]).style(Style::new().fg(self.get_title_color())).build();
+        ]).style(Style::new().fg(self.get_title_color()).bg(Color::Black)).build();
         frame.render_widget(
             big_title,
             header,
