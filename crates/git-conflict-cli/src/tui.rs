@@ -136,7 +136,7 @@ impl<'a> App<'a> {
         let i = match self.state.selected() {
             Some(index) => {
                 if index == 0 {
-                    self.options.len()
+                    self.options.len() -1
                 } else {
                     index - 1
                 }
