@@ -5,8 +5,26 @@ pub struct Description<'a> {
     content: Vec<StyledContent<&'a str>>,
 }
 impl<'a> Description<'a> {
-    pub fn new() -> Self {
-        todo!()
+    pub fn new(&self, index: String) -> Self {
+        let content= match index.as_str(){
+            "0" => {
+                self.local_desc()
+            },
+            "1" => {
+                self.foreign_desc()
+            },
+            "2" => {
+                self.combination_decs()
+            },
+            "3" => {
+                self.tree_desc()
+            },
+            _ => vec!["Nothing to display".white()],
+        };
+        Self{
+            index,
+            content,
+        }
     }
 
     pub fn local_desc(&self) -> Vec<StyledContent<&'a str>> {
