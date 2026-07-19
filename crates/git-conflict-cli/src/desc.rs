@@ -1,19 +1,17 @@
 use ratatui::{crossterm::style::Stylize, style::Style, text::{Line, Span}};
 
 pub struct Description<'a> {
-    pub index: String,
     pub content: Line<'a>,
 }
 impl <'a>Default for Description<'a>{
     fn default() -> Self {
         Self{
-            index: "".to_string(),
             content: Line::default(),
         }
     }
 }
 impl<'a> Description<'a> {
-    pub fn new(&self, index: String) -> Self {
+    pub fn init(&self, index: String) -> Self {
         let content= match index.as_str(){
             "0" => {
                 self.local_desc()
@@ -30,7 +28,6 @@ impl<'a> Description<'a> {
             _ => Line::default()
         };
         Self{
-            index,
             content,
         }
     }

@@ -316,8 +316,8 @@ impl<'a> App<'a> {
             .border_set(border::LIGHT_QUADRUPLE_DASHED)
             .style(Style::new().red().bold().bg(self.bg_color));
 
-        let desc_obj=Description::default().new(self.panel.clone());
-        let paragraph = Paragraph::new(Text::from(desc_obj.content)).block(block);
+        let desc_obj=Description::default().init(self.panel.clone());
+        let paragraph = Paragraph::new(Text::from(desc_obj.content)).block(block).wrap(Wrap { trim: true });
         frame.render_widget(paragraph, right);
     }
 
