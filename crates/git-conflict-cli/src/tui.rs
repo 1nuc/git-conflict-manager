@@ -10,7 +10,7 @@ use ratatui::{
     widgets::{Block, Clear, List, ListState, Paragraph, Wrap},
 };
 use tui_big_text::BigText;
-use std::{env, io};
+use std::{env, io };
 
 pub struct App<'a> {
     options: Vec<Span<'a>>,
@@ -438,11 +438,11 @@ impl<'a> ExecOption<'a> {
 
     fn tree_msg(&mut self) -> Self {
         self.msg=Line::from(vec![
-            "Parenet Interference? ".white().bold(),
-            "For example: if the head branch latest commit is -add features x-".white().bold(),
-            "And the incoming branch commit is -fix feature x-".white().bold(),
-            "And the ancestor commit of branches is -ship feature x-".white().bold(),
-            "The new merge commit will combine the latest cleanest path (ancestor commit) to the new accepted changes".white().bold(),
+            "Parenet Interference? \n".white().bold(),
+            "For example: if the head branch latest commit is -add features x-\n".white().bold(),
+            "And the incoming branch commit is -fix feature x-\n".white().bold(),
+            "And the ancestor commit of branches is -ship feature x-\n".white().bold(),
+            "The new merge commit will combine the latest cleanest path (ancestor commit) to the new accepted changes\n".white().bold(),
         ]);
         self.controls = Line::from(vec![" Yes ".white(), "<y>".red(), " No ".white(), "<n>".red(), " Leave".white(), "<q>".red()]);
         self.is_tree = true;
@@ -457,11 +457,11 @@ impl<'a> ExecOption<'a> {
             "Ours is the branch that is pointed by the head"
                 .white()
                 .bold(),
-            "Theirs is the other branch that is targeted for merge"
+            " Theirs is the other branch that is targeted for merge"
                 .white()
                 .bold(),
         ]);
-        self.controls = Line::from(vec![" Yes ".white(), "<y>".red(), " No ".white(), "<n>".red()]);
+        self.controls = Line::from(vec![" Ours ".white(), "<y>".red(), " Theirs ".white(), "<n>".red()]);
         self.clone()
     }
 
