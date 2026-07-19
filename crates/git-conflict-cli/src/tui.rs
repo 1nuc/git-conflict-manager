@@ -12,6 +12,8 @@ use ratatui::{
 use tui_big_text::BigText;
 use std::{env, io };
 
+use crate::desc::Description;
+
 pub struct App<'a> {
     options: Vec<Span<'a>>,
     state: ListState,
@@ -314,7 +316,8 @@ impl<'a> App<'a> {
             .border_set(border::LIGHT_QUADRUPLE_DASHED)
             .style(Style::new().red().bold().bg(self.bg_color));
 
-        let paragraph = Paragraph::new(Text::from(self.panel.clone().white())).block(block);
+        let desc_obj=Description::default().new(self.panel.clone());
+        let paragraph = Paragraph::new(Text::from(desc_obj.content)).block(block);
         frame.render_widget(paragraph, right);
     }
 

@@ -4,6 +4,14 @@ pub struct Description<'a> {
     index: String,
     content: Vec<StyledContent<&'a str>>,
 }
+impl <'a>Default for Description<'a>{
+    fn default() -> Self {
+        Self{
+            index: "".to_string(),
+            content: Vec::new(),
+        }
+    }
+}
 impl<'a> Description<'a> {
     pub fn new(&self, index: String) -> Self {
         let content= match index.as_str(){
