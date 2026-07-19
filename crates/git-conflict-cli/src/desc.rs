@@ -1,15 +1,10 @@
-use ratatui::{crossterm::style::Stylize, style::Style, text::{Line, Span}};
+use ratatui::{style::Style, text::{Line, Span}};
 
+#[derive(Default)]
 pub struct Description<'a> {
     pub content: Line<'a>,
 }
-impl <'a>Default for Description<'a>{
-    fn default() -> Self {
-        Self{
-            content: Line::default(),
-        }
-    }
-}
+
 impl<'a> Description<'a> {
     pub fn init(&self, index: String) -> Self {
         let content= match index.as_str(){
