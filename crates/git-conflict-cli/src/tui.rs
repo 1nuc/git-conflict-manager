@@ -9,8 +9,20 @@ use ratatui::{
     text::{Line, Span, Text},
     widgets::{Block, Clear, List, ListState, Paragraph, Wrap},
 };
-use ratatui_notifications::{AutoDismiss, Notification, Notifications, SizeConstraint, Timing};
-use std::{env, io, time::Duration};
+use tui_big_text::BigText;
+use std::{env, io};
+
+const COLORS: &[Color]=&[
+    Color::Red,
+    Color::Black,
+    Color::Green,
+    Color::Blue,
+    Color::White,
+    Color::Yellow,
+    Color::Magenta,
+    Color::Cyan,
+    Color::Gray
+];
 
 pub struct App<'a> {
     options: Vec<Span<'a>>,
@@ -26,6 +38,7 @@ pub struct App<'a> {
     overflow: bool,
     is_successful: bool,
     is_merged: bool,
+    tick: usize,
 }
 
 impl<'a> Default for App<'a> {
@@ -70,45 +83,50 @@ impl<'a> App<'a> {
             overflow: false,
             is_successful: false,
             is_merged: false,
+            tick: 0,
         }
     }
 
     fn show_example() {
         warn!(
             "{}",
-            "Example: cargo r src_branch dest_branch"
-                .italic()
+            colored::Colorize::italic("Example: cargo r src_branch dest_branch")
                 .bold()
                 .yellow()
         );
         warn!(
             "{}",
-            "src_branch is the branch is the branch you are currently at whcih is pointed by head"
-                .italic()
+            colored::Colorize::italic("src_branch is the branch is the branch you are currently at whcih is pointed by head")
                 .bold()
                 .yellow()
         );
         warn!(
             "{}",
-            "to check for your source branch type git status"
-                .italic()
+            colored::Colorize::italic("to check for your source branch type git status")
                 .bold()
                 .yellow()
         );
         warn!(
             "{}",
-            "dest_branch is the branch you are trying to merge"
-                .italic()
+            colored::Colorize::italic("dest_branch is the branch you are trying to merge")
                 .bold()
                 .yellow()
         );
         warn!(
             "{}",
-            "rewrite the command with specifying the name of the branches"
-                .italic()
+            colored::Colorize::italic("rewrite the command with specifying the name of the branches")
                 .bold()
                 .yellow()
         );
+    }
+
+    fn tick(&mut self){
+        self.tick+=1;
+    }
+    
+    fn get_title_color(&self) ->Color{
+        let index= self.tick % COLORS.len();
+        COLORS[index]
     }
 
     fn options() -> Vec<Span<'a>> {
@@ -225,6 +243,7 @@ impl<'a> App<'a> {
         while !self.exit {
             terminal.draw(|frame| self.render(frame, frame.area()));
             self.handle_events();
+            self.tick();
         }
         Ok(())
     }
@@ -271,7 +290,6 @@ impl<'a> App<'a> {
     }
 
     fn render_header_footer(&mut self, frame: &mut Frame, header: Rect, footer: Rect) {
-        let title = Line::from("Git Conflict Manager".white());
         let title_footer = Line::from("Controls".white());
 
         let instructions = Line::from(vec![
@@ -285,18 +303,11 @@ impl<'a> App<'a> {
             " <Enter> or <x>".red(),
         ]);
 
+        let big_title=BigText::builder().centered().pixel_size(tui_big_text::PixelSize::Quadrant).lines(vec![
+            "Git Conflict Manager".into(),
+        ]).style(Style::new().fg(self.get_title_color())).build();
         frame.render_widget(
-            Paragraph::new(Text::from(
-                Line::from("Here where you can resolve conflicts intuitivly")
-                    .white()
-                    .centered(),
-            ))
-            .block(
-                Block::bordered()
-                    .style(Style::new().bold().red().bg(self.bg_color))
-                    .title(title.centered())
-                    .bold(),
-            ),
+            big_title,
             header,
         );
         frame.render_widget(
@@ -378,19 +389,6 @@ impl<'a> App<'a> {
         frame.render_widget(options, area);
     }
 
-    #[allow(unused_must_use)]
-    fn render_success_msg(&mut self, frame: &mut Frame, area: Rect) {
-        let mut notifications = Notifications::new();
-        let success_msg = Notification::new("Successfully Merged")
-            .timing(Timing::Auto, Timing::Fixed(Duration::from_secs(3)), Timing::Fixed(Duration::from_secs(3)))
-            .border_type(ratatui::widgets::BorderType::LightQuadrupleDashed)
-            .animation(ratatui_notifications::Animation::Fade)
-            .anchor(ratatui_notifications::Anchor::MiddleCenter)
-            .build()
-            .unwrap();
-        notifications.add(success_msg);
-        notifications.tick(Duration::from_secs(18));
-    }
 }
 
 #[derive(Clone)]
