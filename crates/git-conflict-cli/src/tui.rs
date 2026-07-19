@@ -317,7 +317,7 @@ impl<'a> App<'a> {
             .style(Style::new().red().bold().bg(self.bg_color));
 
         let desc_obj=Description::default().init(self.panel.clone());
-        let paragraph = Paragraph::new(Text::from(desc_obj.content)).block(block).wrap(Wrap { trim: true });
+        let paragraph = List::new(desc_obj.content).block(block).wrap(Wrap { trim: true });
         frame.render_widget(paragraph, right);
     }
 
