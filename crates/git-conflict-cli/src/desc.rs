@@ -39,7 +39,7 @@ impl<'a> Description<'a> {
     pub fn foreign_desc(&self) -> Line<'a>{
         Line::from(vec![
             Span::styled("Accept foreign changes and abondon local once", Style::new().white()),
-            Span::styled("The foreign changes are pointed by the other branch that are trying to merge", Style::new().white()),
+            Span::styled("The foreign changes are pointed by the other branch that you are trying to merge", Style::new().white()),
             Span::styled("The changes of the local branch that are pointed by the head (the branch you are currently at) will be abondoned", Style::new().white()),
             Span::styled("The new merge commit will use the current branch's commit (The conflicted one) as the parent for the new conflict resolution commit", Style::new().white()),
         ])

@@ -317,7 +317,7 @@ impl<'a> App<'a> {
             .style(Style::new().red().bold().bg(self.bg_color));
 
         let desc_obj=Description::default().init(self.panel.clone());
-        let paragraph = List::new(desc_obj.content).block(block).wrap(Wrap { trim: true });
+        let paragraph = List::new(desc_obj.content).block(block);
         frame.render_widget(paragraph, right);
     }
 
@@ -334,21 +334,21 @@ impl<'a> App<'a> {
     }
 
     fn render_pop_up(&mut self, frame: &mut Frame, adj_area: Rect) {
-        let exec_option = self
+        if let Some(exec_option) = self
             .exec_opt
-            .run(self.panel.clone())
-            .expect("Index is None");
-        let opt_block = Block::bordered()
-            .style(Style::new().bg(self.bg_color).red())
-            .title_bottom(exec_option.clone().controls.centered());
-        frame.render_widget(Clear, adj_area);
-        let options = Paragraph::new(Text::from(exec_option.clone().msg).centered().bold())
-            .centered()
-            .wrap(Wrap { trim: true })
-            .block(opt_block.clone());
-        frame.render_widget(options, adj_area);
-        if self.tree_selected {
-            self.render_overflow_pop_up(frame, adj_area, exec_option, opt_block);
+            .run(self.panel.clone()){
+            let opt_block = Block::bordered()
+                .style(Style::new().bg(self.bg_color).red())
+                .title_bottom(exec_option.clone().controls.centered());
+            frame.render_widget(Clear, adj_area);
+            let options = Paragraph::new(Text::from(exec_option.clone().msg).centered().bold())
+                .centered()
+                .wrap(Wrap { trim: true })
+                .block(opt_block.clone());
+            frame.render_widget(options, adj_area);
+            if self.tree_selected {
+                self.render_overflow_pop_up(frame, adj_area, exec_option, opt_block);
+            }
         }
     }
 
