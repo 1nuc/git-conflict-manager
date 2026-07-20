@@ -19,5 +19,3 @@ jobs:
       run: cargo build --workspace --verbose
     - name: test
       run: cargo test --workspace --all-features 
-    - name: Build and deploy 
-      run : cargo publish --workspace --no-verify --token ${{ secrets.CARGO_TOKEN }}
