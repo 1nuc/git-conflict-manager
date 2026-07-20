@@ -1,7 +1,7 @@
 # git-conflict-cli
 
 
-https://github.com/user-attachments/assets/0ea9fdf0-fb10-4621-8217-c1988a17c8ec
+<img width="400" height="209" alt="simulation" src="https://github.com/user-attachments/assets/8683631c-7d11-4bf6-a46c-d562df06d7fc" />
 
 
 [![Crates.io](https://img.shields.io/crates/v/git-conflict-cli.svg)](https://crates.io/crates/git-conflict-cli)
