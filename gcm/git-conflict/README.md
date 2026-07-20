@@ -38,21 +38,7 @@ if repo.does_conflict_exists() {
     repo.checkout_local().resolve_conflict_by_discarding();
 }
 ```
-
----
-
-## Traits
-
-**`Initialize`** — construct a `Repo` from the current working directory.
-
-**`GitOps`** — conflict resolution operations:
-- `does_conflict_exists` — check if the index has conflicts
-- `checkout_local` / `checkout_foreign` — select which side to keep
-- `resolve_conflict_by_discarding` — keep one side, discard the other
-- `resolve_conflict_by_combining` — strip markers and keep both sides
-- `staging` / `commit` — stage and commit resolved files
-
----
+Refer to the rust documentation for more explanation: https://docs.rs/git_conflict
 
 ## License
 
