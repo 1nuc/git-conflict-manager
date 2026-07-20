@@ -6,7 +6,7 @@
 [![docs.rs](https://docs.rs/git_conflict/badge.svg)](https://docs.rs/git_conflict)
 [![License](https://img.shields.io/crates/l/git_conflict.svg)](LICENSE)
 
-<img width="800" height="509" alt="simulation" src="https://github.com/user-attachments/assets/a4ca0287-5699-4a07-87c1-e234d8ac1441" />
+<img width="600" height="409" alt="simulation" src="https://github.com/user-attachments/assets/a4ca0287-5699-4a07-87c1-e234d8ac1441" />
 
 A Rust library and CLI tool for automating git conflict resolution. Define custom strategies and rules to resolve conflicts automatically, without manual intervention.
 
