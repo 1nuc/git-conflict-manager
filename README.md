@@ -22,8 +22,8 @@ This repository is organized as a Cargo workspace containing two crates:
 
 | Crate | Description |
 |-------|-------------|
-| [`crates/git-conflict`](./crates/git-conflict) | Core library — conflict detection, resolution strategies, and git operations |
-| [`crates/git-conflict-cli`](./crates/git-conflict-cli) | CLI tool — interactive terminal interface built on top of the library |
+| [`gcm/git-conflict`](./gcm/git-conflict) | Core library — conflict detection, resolution strategies, and git operations |
+| [`gcm/git-conflict-cli`](./gcm/git-conflict-cli) | CLI tool — interactive terminal interface built on top of the library |
 
 ---
 
@@ -85,6 +85,7 @@ Which conflict resolution would you like to choose:
 Option 1: Keep Local Head Changes
 Option 2: Keep Foreign Branch Changes
 Option 3: Remove Markers and Keep Both Changes
+Option 4: Merge Trees Indexes with Ancestor Intereference (refer to this article for more explanation: soon)
 ```
 
 Select a strategy by entering its number. The tool will automatically stage and commit the resolved files.
@@ -100,6 +101,7 @@ Select a strategy by entering its number. The tool will automatically stage and 
 | 1 | Keep Local | Discards incoming changes and keeps your current branch's version |
 | 2 | Keep Foreign | Discards local changes and keeps the incoming branch's version |
 | 3 | Combine Both | Strips conflict markers and retains content from both branches |
+| 4 | Merge Trees | Merge the tree of the selected branch with the ancestor |
 
 ---
 
@@ -112,7 +114,7 @@ To use the library in your own project, add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-git_conflict = "0.1.2"
+git_conflict = "1.0.0"
 ```
 
 ---
