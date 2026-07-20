@@ -6,6 +6,8 @@
 [![docs.rs](https://docs.rs/git_conflict/badge.svg)](https://docs.rs/git_conflict)
 [![License](https://img.shields.io/crates/l/git_conflict.svg)](LICENSE)
 
+<img width="800" height="509" alt="simulation" src="https://github.com/user-attachments/assets/a4ca0287-5699-4a07-87c1-e234d8ac1441" />
+
 A Rust library and CLI tool for automating git conflict resolution. Define custom strategies and rules to resolve conflicts automatically, without manual intervention.
 
 Git conflicts are an inevitable part of collaborative development, yet resolving them remains a tedious and error-prone manual process. **Git Conflict Manager** eliminates that friction by providing a structured, automated approach to conflict resolution — letting you choose from a set of well-defined strategies and execute them in a single command.
