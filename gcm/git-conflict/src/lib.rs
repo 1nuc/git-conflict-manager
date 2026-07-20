@@ -59,8 +59,8 @@ pub trait ManualControl: Actions {
             self.branches().src_branch,
             self.branches().dest_branch
         );
-        /// get the heads commits
-        /// retreive the commits of "ours" branch and theres
+        // get the heads commits
+        // retreive the commits of "ours" branch and theres
         let ours_parents_commits = self
             .repo()
             .head()
@@ -75,7 +75,7 @@ pub trait ManualControl: Actions {
             .peel_to_commit()
             .expect("error in peeling to a commit in theirs version")
             .id();
-        /// retreive the commits of "theirs" branch
+        // retreive the commits of "theirs" branch
 
         let parent_commits: &[Oid] = match version {
                 true => &[ours_parents_commits],
