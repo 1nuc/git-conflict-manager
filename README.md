@@ -2,7 +2,6 @@
 
 # Git Conflict Manager Using Rust 
 
-[![Test](https://github.com/1nuc/git-conflict-manager/actions/workflows/automate_build.yml/badge.svg)](https://github.com/1nuc/git-conflict-manager/actions/workflows/automate_build.yml)
 [![CI](https://github.com/1nuc/git-conflict-manager/actions/workflows/automate_build.yml/badge.svg)](https://github.com/1nuc/git-conflict-manager/actions/workflows/automate_build.yml)
 [![Crates.io](https://img.shields.io/crates/v/git_conflict.svg)](https://crates.io/crates/git_conflict)
 [![docs.rs](https://docs.rs/git_conflict/badge.svg)](https://docs.rs/git_conflict)
