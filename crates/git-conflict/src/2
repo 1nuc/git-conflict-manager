@@ -5,7 +5,7 @@
 //! 2. Accept Foreign: it will accept the foreign branch's changes and ignore the local changes.
 //! 3. combination: it will combine both branch's changes and remove the markers (straightforward).
 //!    All of which methodologies can cause a complex, diverged or broken trees in the terminal
-//! 4. Trees in git are essentials as they draw the chronological modification made on a Repository
+//! Trees in git are essentials as they draw the chronological modification made on a Repository
 //!    Then the commit is the stamp that provides extra more details such as the user who made the
 //!    commit, time of when the commit was made and signature.
 //!    Due to that, another advanced method targeted for experienced developers was introduced which
@@ -39,19 +39,16 @@ pub trait GitOps {
     fn call_tree_merge(&self, version: bool, parent_interference: bool);
 }
 
-/// The initialization trait for which the repository is built
 pub trait Initialize {
     fn init(branch_1: String, branch_2: String) -> Self;
     fn return_path() -> PathBuf;
     fn return_repo(file_path: PathBuf) -> Option<Repository>;
     fn does_conflict_exists(&self) -> bool;
 }
-/// The utils trait is used by the utility module
 pub trait Utils {
     fn find_ancesistor(&self, other_branch: &str) -> Result<Oid, Error>;
 }
 
-/// the manual control trait that inherits the Actions trait defines the a manual commiting action.
 pub trait ManualControl: Actions {
     fn perform_manual_commit(&mut self, version: bool) -> bool {
         let msg = format!(
@@ -59,8 +56,8 @@ pub trait ManualControl: Actions {
             self.branches().src_branch,
             self.branches().dest_branch
         );
-        /// get the heads commits
-        /// retreive the commits of "ours" branch and theres
+        // get the heads commits
+        // retreive the commits of "ours" branch and theres
         let ours_parents_commits = self
             .repo()
             .head()
@@ -75,7 +72,7 @@ pub trait ManualControl: Actions {
             .peel_to_commit()
             .expect("error in peeling to a commit in theirs version")
             .id();
-        /// retreive the commits of "theirs" branch
+        // retreive the commits of "theirs" branch
 
         let parent_commits: &[Oid] = match version {
                 true => &[ours_parents_commits],
@@ -113,8 +110,8 @@ pub trait Actions {
             .expect("unable to save the staged changes to memory");
     }
 
-    ///Making a commit
-    ///this function has an embedding implementation
+    //Making a commit
+    //this function has an embedding implementation
     #[allow(unused_must_use)]
     #[allow(non_snake_case)]
     fn commit(&mut self, parent_commits: &[Oid], msg: String) -> bool {
@@ -168,12 +165,12 @@ pub trait Actions {
         }
     }
 
-    ///checking whether a conflict exists or not
     fn does_conflict_exists(&self) -> bool {
         self.index().has_conflicts()
     }
 
-    ///return the file with a specific conditions, eg., Conflicted
+    //return the file with conditions
+    //this function has an embedding implementation
     fn return_conflicted_files(&self, condition: Status) -> Option<Vec<String>> {
         let repo = self.repo();
         let mut options = StatusOptions::new();

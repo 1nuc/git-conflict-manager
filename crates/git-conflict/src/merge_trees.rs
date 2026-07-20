@@ -1,3 +1,5 @@
+//! The merge tree struct
+//! it applies the logic of merging conflicted tree with the interference of the past
 use crate::{Actions, Utils, git_src::Repo};
 use git2::{Index, IndexConflict, IndexEntry, MergeOptions, Oid, Repository, build::CheckoutBuilder};
 use std::path::{PathBuf};

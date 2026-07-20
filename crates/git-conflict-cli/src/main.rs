@@ -1,3 +1,7 @@
+//! Git conflict is CLI is a ratatui based tui that enables terminal user interactivity through
+//! through manual control over the tui.
+//! the tui module contains the essential functions required to simulate the actions performed by
+//! the tool.
 use std::io;
 use crate::tui::App;
 mod tui;
