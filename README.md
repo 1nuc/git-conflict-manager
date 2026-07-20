@@ -1,4 +1,4 @@
-<img width="300" height="135" alt="gcm" src="https://github.com/user-attachments/assets/09862683-f96b-4b50-83c0-e5f849ef45fb" />
+<img width="300" height="81" alt="gcm" src="https://github.com/user-attachments/assets/222dd493-662c-4964-bfd1-c82ed8ece56b" />
 
 # Git Conflict Manager Using Rust 
 
