@@ -1,5 +1,9 @@
 # git-conflict-cli
 
+
+https://github.com/user-attachments/assets/0ea9fdf0-fb10-4621-8217-c1988a17c8ec
+
+
 [![Crates.io](https://img.shields.io/crates/v/git-conflict-cli.svg)](https://crates.io/crates/git-conflict-cli)
 [![License](https://img.shields.io/crates/l/git-conflict-cli.svg)](../../LICENSE)
 
