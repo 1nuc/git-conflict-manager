@@ -59,8 +59,8 @@
 <a href=#59 id=59 data-nosnippet>59</a>            <span class="self">self</span>.branches().src_branch,
 <a href=#60 id=60 data-nosnippet>60</a>            <span class="self">self</span>.branches().dest_branch
 <a href=#61 id=61 data-nosnippet>61</a>        );
-<a href=#62 id=62 data-nosnippet>62</a>        <span class="doccomment">/// get the heads commits
-<a href=#63 id=63 data-nosnippet>63</a>        /// retreive the commits of "ours" branch and theres
+<a href=#62 id=62 data-nosnippet>62</a>        <span class="comment">// get the heads commits
+<a href=#63 id=63 data-nosnippet>63</a>        // retreive the commits of "ours" branch and theres
 <a href=#64 id=64 data-nosnippet>64</a>        </span><span class="kw">let </span>ours_parents_commits = <span class="self">self
 <a href=#65 id=65 data-nosnippet>65</a>            </span>.repo()
 <a href=#66 id=66 data-nosnippet>66</a>            .head()
@@ -75,7 +75,7 @@
 <a href=#75 id=75 data-nosnippet>75</a>            .peel_to_commit()
 <a href=#76 id=76 data-nosnippet>76</a>            .expect(<span class="string">"error in peeling to a commit in theirs version"</span>)
 <a href=#77 id=77 data-nosnippet>77</a>            .id();
-<a href=#78 id=78 data-nosnippet>78</a>        <span class="doccomment">/// retreive the commits of "theirs" branch
+<a href=#78 id=78 data-nosnippet>78</a>        <span class="comment">// retreive the commits of "theirs" branch
 <a href=#79 id=79 data-nosnippet>79</a>
 <a href=#80 id=80 data-nosnippet>80</a>        </span><span class="kw">let </span>parent_commits: <span class="kw-2">&amp;</span>[Oid] = <span class="kw">match </span>version {
 <a href=#81 id=81 data-nosnippet>81</a>                <span class="bool-val">true </span>=&gt; <span class="kw-2">&amp;</span>[ours_parents_commits],
