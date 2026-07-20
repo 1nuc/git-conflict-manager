@@ -113,7 +113,7 @@ To use the library in your own project, add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-git_conflict = "1.0.0"
+git_conflict = "1.0.2"
 ```
 
 ---

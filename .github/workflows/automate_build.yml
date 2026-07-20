@@ -2,8 +2,10 @@ name: git_conflict
 
 on:
   push:
+    branches: [main]
     tags: "release-*"
   pull_request:
+    branches: [main]
     tags: "release-*"
 
 env:
