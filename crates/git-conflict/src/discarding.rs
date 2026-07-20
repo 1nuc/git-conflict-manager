@@ -1,3 +1,4 @@
+/// This module specifies the methodology for merging either head or foreign changes
 use std::cell::RefMut;
 
 use git2::{Index, Repository, Status};

@@ -1,5 +1,6 @@
 //! The merge tree struct
 //! it applies the logic of merging conflicted tree with the interference of the past
+//! for further explanation of this methodologies refer to this article (Soon)
 use crate::{Actions, Utils, git_src::Repo};
 use git2::{Index, IndexConflict, IndexEntry, MergeOptions, Oid, Repository, build::CheckoutBuilder};
 use std::path::{PathBuf};
@@ -19,6 +20,7 @@ impl<'a> TreeVersion<'a> {
         }
     }
 
+    /// The main function that resolves the conflict which has further embedded implementation
     pub fn merge_trees(&mut self) {
         let (index, src_commit, ancestor) = self.resolve_conflict_tree_level();
 
@@ -39,6 +41,7 @@ impl<'a> TreeVersion<'a> {
         }
     }
 
+    /// Creating a new entry with the option of having the interference of the ancestor
     fn make_entry(
         &self,
         ancestor: &IndexEntry,
@@ -66,6 +69,7 @@ impl<'a> TreeVersion<'a> {
         }
     }
 
+    /// building an entry based on the selected branch base
     fn build_entry(
         &self,
         ours: &IndexEntry,
@@ -88,6 +92,10 @@ impl<'a> TreeVersion<'a> {
         (entry, path)
     }
 
+    /// The function does three thins
+    /// 1. write the changes of the updated index
+    /// 2. set the updated index as the main repository index
+    /// 3. Performing a checkout using the updated index
     fn apply_index_changes(&mut self, mut index: Index) {
         index
             .write()
@@ -108,7 +116,16 @@ impl<'a> TreeVersion<'a> {
         *self.tr.index.0.borrow_mut() = index;
     }
 
-    #[allow(unused_must_use)]
+    /// resolving the conficts in the tree level 
+    /// the function called the aforementioned functions and applies the changes directly to the
+    /// index which is saved in the above function.
+    /// The flow is simple:
+    /// 1. merging the indexes of all entries (Head, foreign, ancestor)
+    /// 2. chosing whether to have past interference (parent)
+    /// 3. selecting the base branch (calling the build entry function)
+    /// 4. Removing the entries of the ignored index and clearing any further conflicts
+    /// 5. Returning the merged index, ancestor, and the source commit to build the new conflict
+    ///    resolution commit.
     fn resolve_conflict_tree_level(&self) -> (Index, Oid, Oid) {
         let (mut merged_index, src_branch_commit, ancestor) = self.merging_index();
         let repo = self.tr.repo.0.borrow();
@@ -157,6 +174,7 @@ impl<'a> TreeVersion<'a> {
         (index, src_branch_commit, ancestor)
     }
 
+    /// Merging all source indexes (head, foreign, ancestor)
     fn merging_index(&self) -> (Index, Oid, Oid) {
         let repo = self.tr.repo.0.borrow();
         let src_branch = repo.head().expect("unable to get the head");
