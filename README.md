@@ -1,22 +1,5 @@
-<svg width="100%" viewBox="0 0 690 310" xmlns="http://www.w3.org/2000/svg" role="img" style="">
-<title style="fill:rgb(0, 0, 0);stroke:none;color:rgb(11, 11, 11);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">GCM terminal logo</title>
-<desc style="fill:rgb(0, 0, 0);stroke:none;color:rgb(11, 11, 11);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">The letters GCM in a bold red monospace terminal font preceded by a dollar sign prompt, on a dark shadowed background.</desc>
-<defs>
-<linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
-<stop offset="0%" stop-color="#0a0a0a"/>
-<stop offset="100%" stop-color="#1a1a1a"/>
-</linearGradient>
-</defs>
+<img width="300" height="135" alt="gcm" src="https://github.com/user-attachments/assets/09862683-f96b-4b50-83c0-e5f849ef45fb" />
 
-<rect x="0" y="0" width="680" height="300" fill="url(#bgGrad)" style="stroke:none;color:rgb(11, 11, 11);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
-
-<rect x="100" y="90" width="480" height="140" rx="8" fill="#000000" opacity="0.45" style="fill:rgb(0, 0, 0);stroke:none;color:rgb(11, 11, 11);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.45;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
-
-<text x="80" y="185" font-family="'Courier New', monospace" font-size="22" fill="#e0302f" opacity="0.9" style="fill:rgb(224, 48, 47);stroke:none;color:rgb(11, 11, 11);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.9;font-family:&quot;Courier New&quot;, monospace;font-size:22px;font-weight:400;text-anchor:start;dominant-baseline:auto">$</text>
-
-<text x="105" y="200" font-family="'Courier New', monospace" font-weight="700" font-size="110" letter-spacing="6" fill="#e0302f" style="fill:rgb(224, 48, 47);stroke:none;color:rgb(11, 11, 11);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Courier New&quot;, monospace;font-size:110px;font-weight:700;text-anchor:start;dominant-baseline:auto">GCM</text>
-
-</svg><img width="300" height="135" alt="gcm" src="https://github.com/user-attachments/assets/4d063b72-22f5-4282-ae93-2ccbf443aff0" />
 # Git Conflict Manager Using Rust 
 
 [![Test](https://github.com/1nuc/git-conflict-manager/actions/workflows/automate_build.yml/badge.svg)](https://github.com/1nuc/git-conflict-manager/actions/workflows/automate_build.yml)
