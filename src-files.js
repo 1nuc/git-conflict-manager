@@ -1,0 +1,2 @@
+createSrcSidebar('[["git_conflict",["",[],["combine.rs","discarding.rs","git_src.rs","lib.rs","merge_trees.rs","utils.rs"]]],["git_conflict_cli",["",[],["desc.rs","main.rs","tui.rs"]]]]');
+//{"start":19,"fragment_lengths":[105,60]}
