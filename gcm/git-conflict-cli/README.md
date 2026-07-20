@@ -7,7 +7,7 @@
 [![Crates.io](https://img.shields.io/crates/v/git-conflict-cli.svg)](https://crates.io/crates/git-conflict-cli)
 [![License](https://img.shields.io/crates/l/git-conflict-cli.svg)](../../LICENSE)
 
-Interactive CLI tool for resolving git conflicts. Built on top of the [`git_conflict`](../git-conflict) library.
+Interactive TUI tool for resolving git conflicts. Built on top of the [`git_conflict`](../git-conflict) library.
 
 ---
 
@@ -42,6 +42,7 @@ gcm main feature/my-feature
 | 1 | Keep local HEAD changes |
 | 2 | Keep foreign branch changes |
 | 3 | Remove markers and keep both changes |
+| 4 | Merge the selected branch's tree with ancestor |
 
 ---
 
